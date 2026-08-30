@@ -18,6 +18,9 @@ The browser workbench is zero-backend and can be served from the repository root
 npm test
 node bin/eac.mjs compose examples/scenarios/global-b2b-manufacturer.context.json
 node bin/eac.mjs compose examples/scenarios/global-b2b-manufacturer.context.json --output blueprint.json
+node bin/eac.mjs compare \
+  examples/scenarios/o2c-starter.context.json \
+  examples/scenarios/global-b2b-manufacturer.context.json
 ```
 
 No runtime package install is required for the current alpha.
@@ -35,13 +38,17 @@ Enterprise context
                ▼                 ▼                 ▼
          target blueprint   decision trace    architecture gaps
                │                 │                 │
-               └─────────────────┼─────────────────┘
+               └─────────────────┼──────────────────┘
                                  ▼
                          delivery work packages
                                  │
              ┌───────────────────┼────────────────────┐
              ▼                   ▼                    ▼
        Process as Code    Interface as Code     Visual Workbench
+
+baseline scenario ───────┐
+                         ├── deterministic delta ──> impact seeds
+changed context ─────────┘
 ```
 
 ## What the composer owns
@@ -91,26 +98,29 @@ src/
   catalog.mjs       manufacturing reference knowledge
   rulebook.mjs      versioned architecture rule inventory
   engine.mjs        deterministic composition rules
+  diff.mjs          baseline → target architecture delta
   app.mjs           browser workbench
 bin/
-  eac.mjs           JSON context → portable blueprint CLI
+  eac.mjs           compose + compare CLI
 schemas/
   context.schema.json
   blueprint.schema.json
 examples/scenarios/ three materially different reference contexts
-tests/              engine + rule/contract fixtures
+tests/              engine + rules + golden + diff + static smoke fixtures
 styles.css          product visual system
 index.html          zero-backend public app
 .github/workflows/  CI + Pages deployment workflow
 ```
 
-The workbench has four projections over the same composition: **Blueprint**, **Integrations**, **Data**, and **Roadmap**. Selecting an architecture object opens its recommendation trace, rule IDs, findings and delivery impact.
+The workbench has five projections over the same composition: **Blueprint**, **Integrations**, **Data**, **Roadmap**, and **Delta**. `Set baseline` freezes the current composition; changing scope or constraints then shows added, removed and changed architecture/delivery objects. Selecting an architecture object opens its recommendation trace, rule IDs, findings and delivery impact.
 
 ## Contract and rule discipline
 
 - Context and result formats are published as JSON Schema drafts under `schemas/`.
 - `src/rulebook.mjs` currently defines 30 stable rule IDs; implemented rules are explicitly distinguished from experimental contracts.
 - Three reference scenario files are exercised by CI.
+- Golden tests make architecture-count drift explicit during review.
+- Scenario diff never mutates the baseline and emits compact `impactSeeds` for downstream change analysis.
 - The engine uses stable IDs, sorted output, no random IDs, no network calls and no wall-clock data.
 - `AGENTS.md` defines the autonomous development contract.
 
@@ -124,20 +134,12 @@ After bootstrap, the intended project URL is:
 
 ## Backlog
 
-GitHub Issues are the execution source of truth. The P0 sequence is:
-
-1. domain model and stable IDs;
-2. deterministic synthesis engine;
-3. coherent manufacturing reference catalog;
-4. interactive architecture workbench;
-5. integration-pattern decision model;
-6. implementation work-package generation;
-7. CI/fixtures and public GitHub Pages.
+GitHub Issues are the execution source of truth. The foundation already includes the domain model, deterministic synthesis engine, manufacturing catalog, CI/golden fixtures and scenario delta. Remaining P0 work focuses on deeper integration-decision reasoning, roadmap semantics, workbench polish and public Pages verification.
 
 See [`PRODUCT.md`](PRODUCT.md), [`ARCHITECTURE.md`](ARCHITECTURE.md), [`BACKLOG.md`](BACKLOG.md), [`AGENTS.md`](AGENTS.md), the [`schemas/`](schemas/) and [`examples/scenarios/`](examples/scenarios/) directories.
 
 ## Status
 
-**Executable early alpha.** The deterministic engine, manufacturing reference catalog, browser workbench, CLI, schemas, rulebook and CI are implemented. GitHub Pages activation is the remaining manual bootstrap step before the public demo URL can be verified.
+**Executable early alpha.** The deterministic engine, manufacturing reference catalog, browser workbench, scenario comparison, CLI, schemas, rulebook and CI are implemented. GitHub Pages activation is the remaining manual bootstrap step before the public demo URL can be verified.
 
 MIT License.
