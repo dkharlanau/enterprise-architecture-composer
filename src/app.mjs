@@ -1,4 +1,5 @@
 import { composeArchitecture, explainObject } from './engine.mjs';
+import { diffCompositions } from './diff.mjs';
 import { processes, systems, dataObjects, integrationPatterns, byId } from './catalog.mjs';
 
 const DEFAULT_SCENARIO = {
@@ -15,7 +16,9 @@ const DEFAULT_SCENARIO = {
 const state = {
   view: 'blueprint',
   selectedId: null,
-  result: null
+  result: null,
+  baselineResult: null,
+  delta: null
 };
 
 const form = document.querySelector('#context-form');
@@ -24,7 +27,26 @@ const canvas = document.querySelector('#canvas');
 const decisionSummary = document.querySelector('#decision-summary');
 const decisionDetail = document.querySelector('#decision-detail');
 const resetButton = document.querySelector('#reset-demo');
-const viewTabs = [...document.querySelectorAll('.view-tab')];
+const viewTabsContainer = document.querySelector('.view-tabs');
+const canvasToolbar = document.querySelector('.canvas-toolbar');
+
+const deltaTab = document.createElement('button');
+deltaTab.className = 'view-tab';
+deltaTab.type = 'button';
+deltaTab.dataset.view = 'delta';
+deltaTab.textContent = 'Delta';
+viewTabsContainer.append(deltaTab);
+
+const baselineButton = document.createElement('button');
+baselineButton.className = 'secondary-button';
+baselineButton.type = 'button';
+baselineButton.textContent = 'Set baseline';
+baselineButton.title = 'Freeze the current composition as the baseline for What-if comparison';
+baselineButton.style.padding = '8px 10px';
+baselineButton.style.whiteSpace = 'nowrap';
+canvasToolbar.append(baselineButton);
+
+const viewTabs = () => [...document.querySelectorAll('.view-tab[data-view]')];
 
 const html = (value) => String(value ?? '')
   .replaceAll('&', '&amp;')
@@ -235,6 +257,66 @@ function renderRoadmap() {
   `;
 }
 
+function deltaObjectLabel(change) {
+  const item = change.after ?? change.before ?? {};
+  return item.name ?? item.title ?? change.id;
+}
+
+function deltaChangeCard(change) {
+  const focusId = change.kind === 'work-package' || !change.after ? '' : change.id;
+  const beforeState = change.before?.state ? ` · ${change.before.state}` : '';
+  const afterState = change.after?.state ? ` · ${change.after.state}` : '';
+  const stateLine = change.change === 'changed' && (beforeState || afterState)
+    ? `<p class="integration-reason">${html(`${beforeState.replace(' · ', '') || '—'} → ${afterState.replace(' · ', '') || '—'}`)}</p>`
+    : '';
+
+  return `
+    <button class="integration-card" type="button" ${focusId ? `data-object-id="${html(focusId)}"` : 'disabled'}>
+      <div class="integration-top">
+        <div>
+          <p class="eyebrow">${html(change.kind)} · ${html(change.id)}</p>
+          <h3>${html(deltaObjectLabel(change))}</h3>
+        </div>
+        <span class="pattern-chip${change.change === 'added' ? ' event' : change.change === 'removed' ? ' partner' : ''}">${html(change.change)}</span>
+      </div>
+      ${stateLine}
+      <p class="integration-reason">trace: ${html(change.because.length ? change.because.join(' · ') : 'structural comparison')}</p>
+    </button>
+  `;
+}
+
+function renderDelta() {
+  if (!state.delta) return '<div class="empty-state">Set a baseline to start a What-if comparison.</div>';
+  const { summary, changes } = state.delta;
+  const groups = ['added', 'changed', 'removed'];
+
+  return `
+    <div class="canvas-inner">
+      <section class="architecture-layer">
+        <div class="layer-label"><strong>What if?</strong><small>Baseline stays frozen while you change the context.</small></div>
+        <div class="layer-content">
+          <div class="metric-grid">
+            <div class="metric"><b>${summary.added}</b><span>Added</span></div>
+            <div class="metric"><b>${summary.changed}</b><span>Changed</span></div>
+            <div class="metric"><b>${summary.removed}</b><span>Removed</span></div>
+            <div class="metric"><b>${summary.total}</b><span>Total delta</span></div>
+          </div>
+        </div>
+      </section>
+      ${groups.map((group) => {
+        const items = changes.filter((item) => item.change === group);
+        if (!items.length) return '';
+        return `
+          <section class="architecture-layer">
+            <div class="layer-label"><strong>${html(group)}</strong><small>${items.length} architecture/delivery changes.</small></div>
+            <div class="layer-content"><div class="integration-view">${items.map(deltaChangeCard).join('')}</div></div>
+          </section>
+        `;
+      }).join('') || '<div class="empty-state">No architecture delta. The current context matches the baseline.</div>'}
+    </div>
+  `;
+}
+
 function renderCanvas() {
   if (!state.result) {
     canvas.innerHTML = '<div class="empty-state">Select at least one business process to compose a blueprint.</div>';
@@ -245,7 +327,8 @@ function renderCanvas() {
     blueprint: renderBlueprint,
     integrations: renderIntegrations,
     data: renderData,
-    roadmap: renderRoadmap
+    roadmap: renderRoadmap,
+    delta: renderDelta
   };
   canvas.innerHTML = renderers[state.view]();
 }
@@ -294,12 +377,16 @@ function renderDefaultDecisionDetail() {
   const result = state.result;
   const questions = result.findings.filter((item) => item.kind === 'question' || item.kind === 'security-decision');
   const otherFindings = result.findings.filter((item) => !questions.includes(item));
+  const deltaNote = state.delta?.summary.total
+    ? `<p class="detail-copy"><strong>What-if:</strong> ${state.delta.summary.added} added, ${state.delta.summary.changed} changed, ${state.delta.summary.removed} removed vs baseline.</p>`
+    : '';
 
   decisionDetail.innerHTML = `
     <div>
       <p class="eyebrow">Architecture review</p>
       <h3 class="detail-title">${questions.length} decisions still need an owner</h3>
       <p class="detail-copy">The composer does not guess missing architecture facts. Select an object on the canvas to inspect its rule trace.</p>
+      ${deltaNote}
     </div>
     <section class="decision-section">
       <h3>Questions & boundaries</h3>
@@ -377,17 +464,26 @@ function renderAll() {
   renderDecisionDetail();
 }
 
+function updateDelta() {
+  state.delta = state.baselineResult && state.result
+    ? diffCompositions(state.baselineResult, state.result)
+    : null;
+}
+
 function composeFromForm() {
   const context = readContext();
   if (!context.processes.length) {
     state.result = null;
     state.selectedId = null;
+    state.delta = null;
     renderAll();
     return;
   }
 
   try {
     state.result = composeArchitecture(context);
+    if (!state.baselineResult) state.baselineResult = composeArchitecture(context);
+    updateDelta();
     if (state.selectedId) {
       const explanation = explainObject(state.result, state.selectedId);
       if (!explanation.object) state.selectedId = null;
@@ -395,6 +491,7 @@ function composeFromForm() {
     renderAll();
   } catch (error) {
     state.result = null;
+    state.delta = null;
     canvas.innerHTML = `<div class="empty-state">${html(error.message)}</div>`;
     decisionSummary.innerHTML = '';
     decisionDetail.innerHTML = '';
@@ -406,7 +503,7 @@ form.addEventListener('change', composeFromForm);
 
 canvas.addEventListener('click', (event) => {
   const target = event.target.closest('[data-object-id]');
-  if (!target) return;
+  if (!target || target.disabled) return;
   state.selectedId = target.dataset.objectId;
   renderAll();
 });
@@ -418,19 +515,30 @@ decisionDetail.addEventListener('click', (event) => {
   renderAll();
 });
 
-for (const tab of viewTabs) {
+for (const tab of viewTabs()) {
   tab.addEventListener('click', () => {
     state.view = tab.dataset.view;
-    viewTabs.forEach((item) => item.classList.toggle('active', item === tab));
+    viewTabs().forEach((item) => item.classList.toggle('active', item === tab));
     renderCanvas();
   });
 }
+
+baselineButton.addEventListener('click', () => {
+  if (!state.result) return;
+  state.baselineResult = composeArchitecture(readContext());
+  state.selectedId = null;
+  updateDelta();
+  baselineButton.textContent = 'Baseline set';
+  setTimeout(() => { baselineButton.textContent = 'Set baseline'; }, 900);
+  renderAll();
+});
 
 resetButton.addEventListener('click', () => {
   applyDefaultScenario();
   state.selectedId = null;
   state.view = 'blueprint';
-  viewTabs.forEach((item) => item.classList.toggle('active', item.dataset.view === 'blueprint'));
+  state.baselineResult = composeArchitecture(readContext());
+  viewTabs().forEach((item) => item.classList.toggle('active', item.dataset.view === 'blueprint'));
   composeFromForm();
 });
 
