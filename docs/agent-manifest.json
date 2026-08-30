@@ -1,0 +1,44 @@
+{
+  "schema_version": "1.0",
+  "product": "enterprise-architecture-composer",
+  "description": "Deterministic enterprise architecture synthesis from explicit business context and constraints.",
+  "repository": "https://github.com/dkharlanau/enterprise-architecture-composer",
+  "planned_page": "https://dkharlanau.github.io/enterprise-architecture-composer/",
+  "core_principles": [
+    "deterministic-first",
+    "explain-every-recommendation",
+    "vendor-neutral-core",
+    "unknown-is-explicit",
+    "stable-semantic-ids",
+    "one-semantic-owner"
+  ],
+  "interfaces": {
+    "context_schema": "schemas/context.schema.json",
+    "result_schema": "schemas/blueprint.schema.json",
+    "rulebook": "src/rulebook.mjs",
+    "cli": "node bin/eac.mjs compose <context.json> [--output blueprint.json]",
+    "reference_scenario": "examples/scenarios/global-b2b-manufacturer.context.json"
+  },
+  "semantic_ownership": {
+    "owns": [
+      "enterprise composition context",
+      "architecture proposals and recommendation rationale",
+      "scenario proposals and deltas",
+      "unresolved architecture questions",
+      "generated work-package proposals"
+    ],
+    "hands_off_to": {
+      "process semantics": "https://github.com/dkharlanau/process-as-code",
+      "interface operational contracts": "https://github.com/dkharlanau/interface-as-code",
+      "mapping semantics": "https://github.com/dkharlanau/mapping-as-code",
+      "change impact": "https://github.com/dkharlanau/enterprise-change-graph",
+      "visual rendering": "https://github.com/dkharlanau/visual-workbench"
+    }
+  },
+  "safety": {
+    "network_calls_in_core": false,
+    "llm_required": false,
+    "authoritative_ai_output": false,
+    "real_customer_data_in_reference_catalog": false
+  }
+}
