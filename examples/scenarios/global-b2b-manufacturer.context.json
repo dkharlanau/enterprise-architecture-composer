@@ -1,0 +1,17 @@
+{
+  "industry": "manufacturing",
+  "operatingModel": "b2b",
+  "processes": ["order-to-cash", "procure-to-pay", "plan-to-produce"],
+  "scale": {
+    "countries": 8,
+    "legalEntities": 12,
+    "plants": 4,
+    "warehouses": 11
+  },
+  "constraints": {
+    "multiCompany": true,
+    "highVolume": true,
+    "retainLegacyWms": true
+  },
+  "existingSystems": ["erp", "legacy-wms"]
+}
