@@ -1,0 +1,17 @@
+{
+  "industry": "manufacturing",
+  "operatingModel": "b2b",
+  "processes": ["order-to-cash"],
+  "scale": {
+    "countries": 1,
+    "legalEntities": 1,
+    "plants": 1,
+    "warehouses": 1
+  },
+  "constraints": {
+    "multiCompany": false,
+    "highVolume": false,
+    "retainLegacyWms": false
+  },
+  "existingSystems": []
+}
