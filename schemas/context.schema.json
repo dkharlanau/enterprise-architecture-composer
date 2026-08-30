@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dkharlanau.github.io/enterprise-architecture-composer/schemas/context.schema.json",
+  "title": "Enterprise Architecture Composer Context",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "industry": { "type": "string", "minLength": 1, "default": "manufacturing" },
+    "operatingModel": { "type": "string", "minLength": 1, "default": "b2b" },
+    "processes": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": ["order-to-cash", "procure-to-pay", "plan-to-produce", "returns", "intercompany", "record-to-report"]
+      }
+    },
+    "scale": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "countries": { "type": "integer", "minimum": 1 },
+        "legalEntities": { "type": "integer", "minimum": 1 },
+        "plants": { "type": "integer", "minimum": 1 },
+        "warehouses": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "multiCompany": { "type": "boolean" },
+        "highVolume": { "type": "boolean" },
+        "retainLegacyWms": { "type": "boolean" }
+      }
+    },
+    "existingSystems": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": ["crm", "erp", "mdm", "wms", "legacy-wms", "mes", "tms", "integration", "integration-platform", "data-platform", "partner-edge"]
+      }
+    }
+  },
+  "required": ["processes"]
+}
