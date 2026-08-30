@@ -1,8 +1,9 @@
 name: Deploy GitHub Pages
 
+# Bootstrap note: a brand-new repository must have Pages enabled once in
+# Settings -> Pages -> Source: GitHub Actions. GitHub's configure-pages action
+# cannot perform that first enablement with the default GITHUB_TOKEN.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
