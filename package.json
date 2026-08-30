@@ -1,0 +1,14 @@
+{
+  "name": "enterprise-architecture-composer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Explainable enterprise architecture synthesis from business context and constraints.",
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check src/catalog.mjs && node --check src/engine.mjs && node --check src/app.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
