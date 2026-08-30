@@ -10,6 +10,18 @@ It is not another diagram editor, CMDB, application portfolio repository, or pro
 
 The first public slice focuses on a global B2B manufacturing company. A user selects business processes, operating constraints and existing systems; the composer deterministically derives capabilities, system responsibilities, integration needs, data ownership, architecture gaps and work packages.
 
+## Try the reference scenario
+
+The browser workbench is zero-backend and can be served from the repository root. The same core also runs from Node:
+
+```bash
+npm test
+node bin/eac.mjs compose examples/scenarios/global-b2b-manufacturer.context.json
+node bin/eac.mjs compose examples/scenarios/global-b2b-manufacturer.context.json --output blueprint.json
+```
+
+No runtime package install is required for the current alpha.
+
 ## Product loop
 
 ```text
@@ -72,27 +84,47 @@ Reference system roles include CRM, ERP, MDM, WMS, MES, TMS, Integration Platfor
 
 The first integration decision model distinguishes synchronous API, asynchronous message, domain event, EDI/B2B, file/batch, CDC/replication and ETL/ELT using explicit drivers such as latency, fan-out, volume, consistency, replay and partner boundaries.
 
-## Repository direction
-
-The implementation starts deliberately small and portable:
+## Current executable surface
 
 ```text
 src/
-  catalog.mjs       reference capabilities, processes, systems and data
+  catalog.mjs       manufacturing reference knowledge
+  rulebook.mjs      versioned architecture rule inventory
   engine.mjs        deterministic composition rules
   app.mjs           browser workbench
+bin/
+  eac.mjs           JSON context → portable blueprint CLI
+schemas/
+  context.schema.json
+  blueprint.schema.json
+examples/scenarios/ three materially different reference contexts
+tests/              engine + rule/contract fixtures
 styles.css          product visual system
 index.html          zero-backend public app
-tests/              Node built-in deterministic tests
-docs/               product, architecture and design decisions
-.github/workflows/   CI and GitHub Pages
+.github/workflows/  CI + Pages deployment workflow
 ```
 
-No framework is required for the first vertical slice. That keeps the public demo easy to run, fork and deploy while the domain model is still changing.
+The workbench has four projections over the same composition: **Blueprint**, **Integrations**, **Data**, and **Roadmap**. Selecting an architecture object opens its recommendation trace, rule IDs, findings and delivery impact.
+
+## Contract and rule discipline
+
+- Context and result formats are published as JSON Schema drafts under `schemas/`.
+- `src/rulebook.mjs` currently defines 30 stable rule IDs; implemented rules are explicitly distinguished from experimental contracts.
+- Three reference scenario files are exercised by CI.
+- The engine uses stable IDs, sorted output, no random IDs, no network calls and no wall-clock data.
+- `AGENTS.md` defines the autonomous development contract.
+
+## GitHub Pages bootstrap
+
+The repository contains a Pages workflow, but GitHub requires Pages to be enabled once for a brand-new repository. In **Settings → Pages**, choose **GitHub Actions** as the source; then run **Deploy GitHub Pages** from the Actions tab. The first enablement cannot be performed with the workflow's default `GITHUB_TOKEN`.
+
+After bootstrap, the intended project URL is:
+
+`https://dkharlanau.github.io/enterprise-architecture-composer/`
 
 ## Backlog
 
-The detailed implementation backlog is maintained as GitHub Issues. The P0 sequence is:
+GitHub Issues are the execution source of truth. The P0 sequence is:
 
 1. domain model and stable IDs;
 2. deterministic synthesis engine;
@@ -102,10 +134,10 @@ The detailed implementation backlog is maintained as GitHub Issues. The P0 seque
 6. implementation work-package generation;
 7. CI/fixtures and public GitHub Pages.
 
-See [`PRODUCT.md`](PRODUCT.md), [`ARCHITECTURE.md`](ARCHITECTURE.md), [`BACKLOG.md`](BACKLOG.md) and [`AGENTS.md`](AGENTS.md).
+See [`PRODUCT.md`](PRODUCT.md), [`ARCHITECTURE.md`](ARCHITECTURE.md), [`BACKLOG.md`](BACKLOG.md), [`AGENTS.md`](AGENTS.md), the [`schemas/`](schemas/) and [`examples/scenarios/`](examples/scenarios/) directories.
 
 ## Status
 
-**Foundation / early alpha.** The repository is being built as an executable product rather than a documentation-only concept. The first milestone is a useful manufacturing blueprint composer that runs entirely in the browser and has deterministic test fixtures.
+**Executable early alpha.** The deterministic engine, manufacturing reference catalog, browser workbench, CLI, schemas, rulebook and CI are implemented. GitHub Pages activation is the remaining manual bootstrap step before the public demo URL can be verified.
 
-MIT license is planned; no licensing claim is made until a LICENSE file is committed.
+MIT License.
