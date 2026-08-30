@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Compose an explainable enterprise architecture blueprint from business scope, systems and constraints." />
+  <meta name="theme-color" content="#171c24" />
+  <title>Enterprise Architecture Composer</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="Enterprise Architecture Composer home">
+      <span class="brand-mark" aria-hidden="true">EA/C</span>
+      <span class="brand-copy">
+        <strong>Enterprise Architecture Composer</strong>
+        <small>intent → explainable blueprint</small>
+      </span>
+    </a>
+    <div class="topbar-meta">
+      <span class="status-dot" aria-hidden="true"></span>
+      <span>Reference engine 0.1</span>
+      <a href="https://github.com/dkharlanau/enterprise-architecture-composer">GitHub</a>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="intro" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">Architecture synthesis workbench</p>
+        <h1 id="page-title">Configure the business.<br />Compose the architecture.</h1>
+      </div>
+      <p class="intro-copy">
+        Select process scope and constraints. The engine derives logical system responsibilities,
+        integration patterns, data ownership questions and delivery work — with a rule trace for every recommendation.
+      </p>
+    </section>
+
+    <section class="workbench" aria-label="Architecture Composer">
+      <aside class="context-panel panel" aria-label="Enterprise context">
+        <div class="panel-heading">
+          <span class="step-index">01</span>
+          <div>
+            <p class="eyebrow">Context</p>
+            <h2>Shape the enterprise</h2>
+          </div>
+        </div>
+
+        <form id="context-form">
+          <fieldset>
+            <legend>Process scope</legend>
+            <div id="process-options" class="option-stack"></div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Architecture drivers</legend>
+            <label class="switch-row">
+              <span><strong>Multi-company</strong><small>Multiple legal entities / intercompany scope</small></span>
+              <input type="checkbox" name="multiCompany" checked />
+            </label>
+            <label class="switch-row">
+              <span><strong>High volume</strong><small>Favor decoupled high-throughput flows</small></span>
+              <input type="checkbox" name="highVolume" checked />
+            </label>
+            <label class="switch-row">
+              <span><strong>Retain legacy WMS</strong><small>Keep warehouse boundary during transformation</small></span>
+              <input type="checkbox" name="retainLegacyWms" checked />
+            </label>
+          </fieldset>
+
+          <fieldset>
+            <legend>Existing landscape</legend>
+            <div class="two-col-options">
+              <label class="check-tile"><input type="checkbox" name="existingSystem" value="erp" checked /><span>ERP</span></label>
+              <label class="check-tile"><input type="checkbox" name="existingSystem" value="legacy-wms" checked /><span>WMS</span></label>
+              <label class="check-tile"><input type="checkbox" name="existingSystem" value="crm" /><span>CRM</span></label>
+              <label class="check-tile"><input type="checkbox" name="existingSystem" value="mes" /><span>MES</span></label>
+            </div>
+          </fieldset>
+
+          <details class="scale-details">
+            <summary>Reference scale</summary>
+            <div class="scale-grid">
+              <label>Countries<input type="number" name="countries" min="1" value="8" /></label>
+              <label>Legal entities<input type="number" name="legalEntities" min="1" value="12" /></label>
+              <label>Plants<input type="number" name="plants" min="1" value="4" /></label>
+              <label>Warehouses<input type="number" name="warehouses" min="1" value="11" /></label>
+            </div>
+          </details>
+        </form>
+
+        <div class="context-footer">
+          <button id="reset-demo" class="secondary-button" type="button">Reset reference scenario</button>
+          <small>No data leaves your browser.</small>
+        </div>
+      </aside>
+
+      <section class="canvas-panel panel" aria-label="Composed architecture">
+        <div class="canvas-toolbar">
+          <div class="panel-heading compact">
+            <span class="step-index">02</span>
+            <div>
+              <p class="eyebrow">Composition</p>
+              <h2>Target blueprint</h2>
+            </div>
+          </div>
+          <div class="view-tabs" role="tablist" aria-label="Blueprint views">
+            <button class="view-tab active" type="button" data-view="blueprint">Blueprint</button>
+            <button class="view-tab" type="button" data-view="integrations">Integrations</button>
+            <button class="view-tab" type="button" data-view="data">Data</button>
+            <button class="view-tab" type="button" data-view="roadmap">Roadmap</button>
+          </div>
+        </div>
+
+        <div id="canvas" class="canvas" aria-live="polite"></div>
+      </section>
+
+      <aside class="decision-panel panel" aria-label="Architecture decisions">
+        <div class="panel-heading">
+          <span class="step-index">03</span>
+          <div>
+            <p class="eyebrow">Decision trace</p>
+            <h2>Why this design?</h2>
+          </div>
+        </div>
+        <div id="decision-summary"></div>
+        <div id="decision-detail"></div>
+      </aside>
+    </section>
+
+    <section class="product-note">
+      <span class="eyebrow">What makes this different</span>
+      <p>
+        The canvas is a projection, not the source of truth. The product composes architecture from explicit facts and
+        deterministic rules, then hands adopted process, interface and visual semantics to the specialized tools that own them.
+      </p>
+    </section>
+  </main>
+
+  <script type="module" src="./src/app.mjs"></script>
+</body>
+</html>
