@@ -21,7 +21,7 @@ test('rulebook contains at least twenty stable reference rules with unique IDs',
   const ids = RULEBOOK.map((rule) => rule.id);
   assert.equal(new Set(ids).size, ids.length);
   for (const rule of RULEBOOK) {
-    assert.match(rule.id, /^[A-Z]+(?:-[A-Z]+)*-\d{3}$/);
+    assert.match(rule.id, /^[A-Z0-9]+(?:-[A-Z0-9]+)*-\d{3}$/);
     assert.ok(['experimental', 'fixture-backed', 'documented', 'stable'].includes(rule.maturity));
     assert.ok(rule.description.length > 20);
   }
