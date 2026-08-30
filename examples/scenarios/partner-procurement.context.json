@@ -1,0 +1,17 @@
+{
+  "industry": "manufacturing",
+  "operatingModel": "b2b",
+  "processes": ["procure-to-pay", "record-to-report"],
+  "scale": {
+    "countries": 3,
+    "legalEntities": 3,
+    "plants": 2,
+    "warehouses": 4
+  },
+  "constraints": {
+    "multiCompany": false,
+    "highVolume": true,
+    "retainLegacyWms": false
+  },
+  "existingSystems": ["erp", "wms"]
+}
