@@ -4,9 +4,13 @@
   "private": true,
   "type": "module",
   "description": "Explainable enterprise architecture synthesis from business context and constraints.",
+  "bin": {
+    "eac": "./bin/eac.mjs"
+  },
   "scripts": {
+    "compose:demo": "node bin/eac.mjs compose examples/scenarios/global-b2b-manufacturer.context.json",
     "test": "node --test",
-    "check": "node --check src/catalog.mjs && node --check src/engine.mjs && node --check src/app.mjs"
+    "check": "node --check src/catalog.mjs && node --check src/rulebook.mjs && node --check src/engine.mjs && node --check src/app.mjs && node --check bin/eac.mjs"
   },
   "engines": {
     "node": ">=20"
