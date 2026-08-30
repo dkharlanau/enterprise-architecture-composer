@@ -9,8 +9,9 @@
   },
   "scripts": {
     "compose:demo": "node bin/eac.mjs compose examples/scenarios/global-b2b-manufacturer.context.json",
+    "compare:demo": "node bin/eac.mjs compare examples/scenarios/o2c-starter.context.json examples/scenarios/global-b2b-manufacturer.context.json",
     "test": "node --test",
-    "check": "node --check src/catalog.mjs && node --check src/rulebook.mjs && node --check src/engine.mjs && node --check src/app.mjs && node --check bin/eac.mjs"
+    "check": "node --check src/catalog.mjs && node --check src/rulebook.mjs && node --check src/engine.mjs && node --check src/diff.mjs && node --check src/app.mjs && node --check bin/eac.mjs"
   },
   "engines": {
     "node": ">=20"
