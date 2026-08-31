@@ -29,9 +29,10 @@ test('portable bundle recomposes to the identical public Composer blueprint', ()
   assert.deepEqual(restored.constraints, bundle.context.constraints);
 });
 
-test('portable bundle preserves explicit NFR profiles across roundtrip', () => {
+test('portable bundle preserves explicit NFR profiles and strict policy across roundtrip', () => {
   const result = composeArchitecture({
     processes: ['order-to-cash'],
+    requireExplicitNfrs: true,
     nfrProfile: { volume: 'high', replay: 'desirable' },
     integrationProfiles: {
       'integration.delivery-to-warehouse': {
@@ -46,6 +47,7 @@ test('portable bundle preserves explicit NFR profiles across roundtrip', () => {
   const restored = restoreContextFromBundle(bundle);
   const verification = verifyBundleRecomposition(bundle);
 
+  assert.equal(restored.requireExplicitNfrs, true);
   assert.deepEqual(restored.nfrProfile, result.context.nfrProfile);
   assert.deepEqual(restored.integrationProfiles, result.context.integrationProfiles);
   assert.equal(verification.matches, true);
@@ -59,12 +61,14 @@ test('shareable context strips unknown company-specific fields', () => {
     scale: { countries: 1, legalEntities: 1, plants: 1, warehouses: 1 },
     constraints: { multiCompany: false, highVolume: false, retainLegacyWms: false },
     existingSystemIds: ['sys.erp'],
+    requireExplicitNfrs: true,
     companyName: 'Sensitive Customer Name',
     notes: 'confidential'
   });
 
   assert.equal(clean.companyName, undefined);
   assert.equal(clean.notes, undefined);
+  assert.equal(clean.requireExplicitNfrs, true);
   assert.deepEqual(clean.existingSystemIds, ['sys.erp']);
 });
 
@@ -79,12 +83,16 @@ test('bundle serialization is deterministic and Git-review friendly', () => {
 test('Markdown report contains context, decisions, findings and roadmap', () => {
   const result = composeArchitecture({
     processes: ['order-to-cash', 'procure-to-pay'],
-    constraints: { multiCompany: true }
+    constraints: { multiCompany: true },
+    requireExplicitNfrs: true,
+    nfrProfile: { volume: 'high' }
   });
   const report = bundleToMarkdown(createPortableBundle(result));
 
   assert.match(report, /^# Enterprise Architecture Decision Report/m);
   assert.match(report, /## Context/);
+  assert.match(report, /Explicit NFR confirmation: required/);
+  assert.match(report, /explicit NFR gaps/);
   assert.match(report, /## Target architecture/);
   assert.match(report, /## Architecture findings/);
   assert.match(report, /## Recommendations/);
