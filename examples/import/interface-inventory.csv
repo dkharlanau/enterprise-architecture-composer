@@ -1,0 +1,3 @@
+id,name,source_system_id,target_system_id,target_integration_id,strategy,notes
+if.crm-order,CRM order creation,app.crm,app.erp,integration.sales-order-request,keep,Current order API
+if.erp-wms,ERP delivery to legacy WMS,app.erp,app.legacy-wms,integration.delivery-to-warehouse,replace,Replace with target warehouse integration
