@@ -22,6 +22,19 @@
         "integrations": { "$ref": "#/$defs/objects" }
       }
     },
+    "transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "systems", "integrations", "replacements", "dependencies", "coexistenceWindows"],
+      "properties": {
+        "schemaVersion": { "const": "0.1" },
+        "systems": { "type": "array", "items": { "type": "object" } },
+        "integrations": { "type": "array", "items": { "type": "object" } },
+        "replacements": { "type": "array", "items": { "type": "object" } },
+        "dependencies": { "type": "array", "items": { "type": "object" } },
+        "coexistenceWindows": { "type": "array", "items": { "type": "object" } }
+      }
+    },
     "recommendations": {
       "type": "array",
       "items": {
