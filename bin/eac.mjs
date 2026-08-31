@@ -17,6 +17,7 @@ import {
 function usage() {
   console.error(`Usage:
   node bin/eac.mjs compose <context.json> [--output blueprint.json]
+  node bin/eac.mjs transition <context.json> [--output transition.json]
   node bin/eac.mjs compare <base-context.json> <target-context.json> [--output delta.json]
   node bin/eac.mjs integration <drivers.json> [--output decision.json]
   node bin/eac.mjs roadmap <context.json> [--markdown] [--output roadmap.json|roadmap.md]
@@ -70,6 +71,28 @@ async function main(argv) {
     const result = composeArchitecture(await readJson(first));
     if (output.path) await writeFile(resolve(process.cwd(), output.path), serializeComposition(result), 'utf8');
     else process.stdout.write(serializeComposition(result));
+    return;
+  }
+
+  if (command === 'transition' && first) {
+    const transitionRest = [second, ...rest].filter(Boolean);
+    const output = validateOutput(transitionRest);
+    if (!output.ok) {
+      usage();
+      process.exitCode = 2;
+      return;
+    }
+    const result = composeArchitecture(await readJson(first));
+    if (!result.transition) {
+      console.error('eac: context does not contain currentLandscape; no transition architecture was produced.');
+      process.exitCode = 3;
+      return;
+    }
+    await emitJson({
+      ...result.transition,
+      findings: result.findings.filter((item) => item.kind === 'transition-decision'),
+      workPackages: result.workPackages.filter((item) => item.id.startsWith('wp.transition.'))
+    }, output.path);
     return;
   }
 
