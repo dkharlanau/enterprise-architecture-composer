@@ -1,9 +1,9 @@
-export const RULEBOOK_VERSION = '0.1.0';
+export const RULEBOOK_VERSION = '0.2.0';
 
 // The rulebook is the public inventory of deterministic architecture guidance.
-// `implemented: true` means the current engine already executes the rule.
-// Remaining rules are specified contracts for the next engine increments; they are
-// deliberately visible before implementation so backlog and fixtures can refer to stable IDs.
+// `implemented: true` means the current public Composer surface executes or emits the rule.
+// Remaining rules are specified contracts for later increments; they are deliberately visible
+// before implementation so backlog and fixtures can refer to stable IDs.
 export const RULEBOOK = [
   { id: 'SCOPE-MULTICOMPANY-001', family: 'scope', implemented: true, maturity: 'fixture-backed', description: 'Multi-company operation requires explicit intercompany and master-data architecture scope.' },
   { id: 'SCOPE-MASTERDATA-001', family: 'scope', implemented: true, maturity: 'fixture-backed', description: 'Broad cross-process scope requires explicit shared master-data responsibility.' },
@@ -24,8 +24,9 @@ export const RULEBOOK = [
   { id: 'INT-EVENT-001', family: 'integration', implemented: true, maturity: 'fixture-backed', description: 'A non-blocking business fact with multiple consumers favors a domain event.' },
   { id: 'INT-ASYNC-001', family: 'integration', implemented: true, maturity: 'fixture-backed', description: 'A non-blocking one-to-one state transfer favors asynchronous messaging.' },
   { id: 'INT-ASYNC-002', family: 'integration', implemented: true, maturity: 'fixture-backed', description: 'High-volume non-blocking transfer strengthens the case for asynchronous messaging.' },
-  { id: 'INT-BATCH-001', family: 'integration', implemented: false, maturity: 'experimental', description: 'Large-volume exchange with relaxed latency and bounded execution windows may favor file/batch transfer.' },
-  { id: 'INT-CDC-001', family: 'integration', implemented: false, maturity: 'experimental', description: 'Read-model or persistence replication with change propagation semantics may favor CDC/replication.' },
+  { id: 'INT-BATCH-001', family: 'integration', implemented: true, maturity: 'fixture-backed', description: 'Large-volume exchange with relaxed latency and bounded execution windows may favor file/batch transfer.' },
+  { id: 'INT-CDC-001', family: 'integration', implemented: true, maturity: 'fixture-backed', description: 'Read-model or persistence replication with change propagation semantics may favor CDC/replication.' },
+  { id: 'INT-NFR-CONFLICT-001', family: 'integration', implemented: true, maturity: 'fixture-backed', description: 'Conflicting non-functional drivers must be surfaced as an architecture decision instead of being hidden by a technology recommendation.' },
   { id: 'OPS-ASYNC-001', family: 'operations', implemented: true, maturity: 'fixture-backed', description: 'Asynchronous flows require explicit replay, monitoring and reconciliation decisions.' },
   { id: 'OPS-IDEMPOTENCY-001', family: 'operations', implemented: false, maturity: 'experimental', description: 'Replayable at-least-once processing requires an idempotency or duplicate-handling decision.' },
   { id: 'OPS-ORDERING-001', family: 'operations', implemented: false, maturity: 'experimental', description: 'Business objects with sequence-sensitive updates require an explicit ordering strategy.' },
