@@ -1,5 +1,6 @@
 import { composeArchitecture as composeBase } from './engine.mjs';
 import { decideIntegrationPattern } from './integration-decision.mjs';
+import { analyzeArchitectureQuality } from './quality.mjs';
 
 function defaultPurpose(integration) {
   const map = {
@@ -35,6 +36,10 @@ function mergeProfile(integration, result, input) {
   const global = input?.nfrProfile ?? {};
   const perFlow = input?.integrationProfiles?.[integration.id] ?? {};
   return { ...defaultProfile(integration, result), ...global, ...perFlow };
+}
+
+function sortedUnique(values = []) {
+  return [...new Set(values)].sort((a, b) => a.localeCompare(b));
 }
 
 export function composeArchitecture(input = {}) {
@@ -95,21 +100,42 @@ export function composeArchitecture(input = {}) {
     };
   });
 
-  const findings = [...result.findings, ...extraFindings].sort((a, b) => a.id.localeCompare(b.id));
   const integrationProfiles = Object.fromEntries(profileEntries.sort(([a], [b]) => a.localeCompare(b)));
+  const context = {
+    ...result.context,
+    ...(input.nfrProfile ? { nfrProfile: structuredClone(input.nfrProfile) } : {}),
+    ...(Object.keys(integrationProfiles).length ? { integrationProfiles } : {})
+  };
 
-  return {
+  const draft = {
     ...result,
     engineVersion: '0.2.0',
-    context: {
-      ...result.context,
-      ...(input.nfrProfile ? { nfrProfile: structuredClone(input.nfrProfile) } : {}),
-      ...(Object.keys(integrationProfiles).length ? { integrationProfiles } : {})
-    },
+    context,
     blueprint: { ...result.blueprint, integrations },
     recommendations,
+    findings: [...result.findings, ...extraFindings].sort((a, b) => a.id.localeCompare(b.id))
+  };
+
+  const quality = analyzeArchitectureQuality(draft);
+  const findings = [...new Map([...draft.findings, ...quality.findings].map((item) => [item.id, item])).values()]
+    .sort((a, b) => a.id.localeCompare(b.id));
+
+  const decisionFindingIds = findings
+    .filter((item) => item.severity !== 'info')
+    .map((item) => item.id);
+  const workPackages = result.workPackages.map((item) => item.id === 'wp.architecture.resolve-decisions'
+    ? { ...item, sourceIds: sortedUnique([...(item.sourceIds ?? []), ...decisionFindingIds]) }
+    : item);
+
+  return {
+    ...draft,
     findings,
-    metrics: { ...result.metrics, findingCount: findings.length }
+    workPackages,
+    metrics: {
+      ...result.metrics,
+      findingCount: findings.length,
+      ...quality.metrics
+    }
   };
 }
 
