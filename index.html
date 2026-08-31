@@ -3,10 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Compose an explainable enterprise architecture blueprint from business scope, systems and constraints." />
+  <meta name="description" content="Compose an explainable enterprise architecture, compare scenarios, model transitions and export governed architecture artifacts." />
   <meta name="theme-color" content="#171c24" />
+  <meta property="og:title" content="Enterprise Architecture Composer" />
+  <meta property="og:description" content="Business context in. Explainable architecture, migration path and delivery scope out." />
   <title>Enterprise Architecture Composer</title>
   <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./styles-v2.css" />
 </head>
 <body>
   <header class="topbar">
@@ -14,12 +17,12 @@
       <span class="brand-mark" aria-hidden="true">EA/C</span>
       <span class="brand-copy">
         <strong>Enterprise Architecture Composer</strong>
-        <small>intent → explainable blueprint</small>
+        <small>intent → blueprint → transition → delivery</small>
       </span>
     </a>
     <div class="topbar-meta">
       <span class="status-dot" aria-hidden="true"></span>
-      <span>Reference engine 0.1</span>
+      <span>Composer v0.2</span>
       <a href="https://github.com/dkharlanau/enterprise-architecture-composer">GitHub</a>
     </div>
   </header>
@@ -30,10 +33,15 @@
         <p class="eyebrow">Architecture synthesis workbench</p>
         <h1 id="page-title">Configure the business.<br />Compose the architecture.</h1>
       </div>
-      <p class="intro-copy">
-        Select process scope and constraints. The engine derives logical system responsibilities,
-        integration patterns, data ownership questions and delivery work — with a rule trace for every recommendation.
-      </p>
+      <div class="intro-copy-stack">
+        <p class="intro-copy">
+          Select business scope and constraints. The deterministic engine derives target responsibilities,
+          integration decisions, architecture gaps, migration steps and delivery work — with an inspectable rule trace.
+        </p>
+        <div class="intro-proof" aria-label="Product principles">
+          <span>Deterministic</span><span>Vendor-neutral</span><span>Git-native</span><span>No opaque score</span>
+        </div>
+      </div>
     </section>
 
     <section class="workbench" aria-label="Architecture Composer">
@@ -59,22 +67,72 @@
               <input type="checkbox" name="multiCompany" checked />
             </label>
             <label class="switch-row">
-              <span><strong>High volume</strong><small>Favor decoupled high-throughput flows</small></span>
+              <span><strong>High volume</strong><small>High-throughput context for integration decisions</small></span>
               <input type="checkbox" name="highVolume" checked />
             </label>
             <label class="switch-row">
-              <span><strong>Retain legacy WMS</strong><small>Keep warehouse boundary during transformation</small></span>
-              <input type="checkbox" name="retainLegacyWms" checked />
+              <span><strong>Retain legacy WMS</strong><small>Keep the WMS boundary without replacing the instance</small></span>
+              <input type="checkbox" name="retainLegacyWms" />
             </label>
           </fieldset>
 
+          <details class="profile-details">
+            <summary>Integration NFR override</summary>
+            <p class="field-note">Optional global driver overrides. Per-flow profiles remain available in the JSON contract/CLI.</p>
+            <div class="select-grid">
+              <label>Volume
+                <select name="nfrVolume">
+                  <option value="">Catalog default</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="very-high">Very high</option>
+                </select>
+              </label>
+              <label>Replay
+                <select name="nfrReplay">
+                  <option value="">Catalog default</option>
+                  <option value="not-required">Not required</option>
+                  <option value="desirable">Desirable</option>
+                  <option value="required">Required</option>
+                </select>
+              </label>
+              <label>Offline tolerance
+                <select name="nfrOffline">
+                  <option value="">Catalog default</option>
+                  <option value="none">None</option>
+                  <option value="short">Short</option>
+                  <option value="extended">Extended</option>
+                </select>
+              </label>
+              <label>Change frequency
+                <select name="nfrChange">
+                  <option value="">Catalog default</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </label>
+            </div>
+          </details>
+
           <fieldset>
-            <legend>Existing landscape</legend>
+            <legend>Existing logical landscape</legend>
             <div class="two-col-options">
               <label class="check-tile"><input type="checkbox" name="existingSystem" value="erp" checked /><span>ERP</span></label>
               <label class="check-tile"><input type="checkbox" name="existingSystem" value="legacy-wms" checked /><span>WMS</span></label>
               <label class="check-tile"><input type="checkbox" name="existingSystem" value="crm" /><span>CRM</span></label>
               <label class="check-tile"><input type="checkbox" name="existingSystem" value="mes" /><span>MES</span></label>
+            </div>
+          </fieldset>
+
+          <fieldset class="transition-fieldset">
+            <legend>Current → target migration</legend>
+            <p class="field-note">Application instances are separate from target system roles. Load a reference replacement to inspect introduce-before-retire planning.</p>
+            <div id="migration-status" class="migration-status">No application-instance migration scenario loaded.</div>
+            <div class="button-row">
+              <button id="load-transition-demo" class="secondary-button" type="button">Load WMS replacement</button>
+              <button id="clear-current-landscape" class="text-button" type="button">Clear</button>
             </div>
           </fieldset>
 
@@ -101,15 +159,22 @@
             <span class="step-index">02</span>
             <div>
               <p class="eyebrow">Composition</p>
-              <h2>Target blueprint</h2>
+              <h2>Architecture workspace</h2>
             </div>
           </div>
-          <div class="view-tabs" role="tablist" aria-label="Blueprint views">
-            <button class="view-tab active" type="button" data-view="blueprint">Blueprint</button>
-            <button class="view-tab" type="button" data-view="integrations">Integrations</button>
-            <button class="view-tab" type="button" data-view="data">Data</button>
-            <button class="view-tab" type="button" data-view="roadmap">Roadmap</button>
+          <div class="toolbar-actions">
+            <button id="set-baseline" class="secondary-button compact-button" type="button">Set baseline</button>
+            <button id="export-bundle" class="icon-button" type="button" title="Download portable architecture bundle">Bundle</button>
+            <button id="export-report" class="icon-button" type="button" title="Download Markdown architecture report">Report</button>
           </div>
+        </div>
+        <div class="view-tabs" role="tablist" aria-label="Architecture views">
+          <button class="view-tab active" type="button" data-view="blueprint">Blueprint</button>
+          <button class="view-tab" type="button" data-view="integrations">Integrations</button>
+          <button class="view-tab" type="button" data-view="data">Data</button>
+          <button class="view-tab" type="button" data-view="transition">Transition</button>
+          <button class="view-tab" type="button" data-view="roadmap">Roadmap</button>
+          <button class="view-tab" type="button" data-view="delta">Delta</button>
         </div>
 
         <div id="canvas" class="canvas" aria-live="polite"></div>
@@ -129,10 +194,10 @@
     </section>
 
     <section class="product-note">
-      <span class="eyebrow">What makes this different</span>
+      <span class="eyebrow">A synthesis layer, not another CMDB</span>
       <p>
-        The canvas is a projection, not the source of truth. The product composes architecture from explicit facts and
-        deterministic rules, then hands adopted process, interface and visual semantics to the specialized tools that own them.
+        The canvas is a projection, not the source of truth. Composer owns proposal semantics and explanation;
+        adopted process, interface and visual semantics move to the specialized repositories that own them.
       </p>
     </section>
   </main>
