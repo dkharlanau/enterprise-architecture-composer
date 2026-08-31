@@ -10,12 +10,15 @@ function indexResult(result) {
     if (!Array.isArray(collection)) continue;
     for (const item of collection) objects.set(item.id, item);
   }
+  for (const collection of ['systems', 'integrations', 'replacements', 'dependencies', 'coexistenceWindows']) {
+    for (const item of result.transition?.[collection] ?? []) objects.set(item.id, item);
+  }
   for (const item of result.findings ?? []) objects.set(item.id, item);
   for (const item of result.recommendations ?? []) objects.set(item.id, item);
   return objects;
 }
 
-function triggerFor(workPackage, result) {
+function triggerFor(workPackage) {
   if (workPackage.id === 'wp.foundation.integration-platform') return 'integration-platform responsibility is present in the composed target';
   if (workPackage.id === 'wp.data.master-data') return 'MDM responsibility is present in the composed target';
   if (workPackage.id === 'wp.security.partner-boundary') return 'one or more integrations cross an external partner boundary';
@@ -23,6 +26,9 @@ function triggerFor(workPackage, result) {
   if (workPackage.id === 'wp.testing.end-to-end') return 'the composed solution contains cross-system integration scope';
   if (workPackage.id === 'wp.cutover.wms-coexistence') return 'the context explicitly retains the legacy WMS';
   if (workPackage.id.startsWith('wp.integration.')) return 'the corresponding integration is present in the target blueprint';
+  if (workPackage.id.startsWith('wp.transition.introduce.')) return 'a current application is explicitly marked for replacement and its target role is required';
+  if (workPackage.id.startsWith('wp.transition.coexist.')) return 'replacement requires a bounded overlap for migration verification and rollback readiness';
+  if (workPackage.id.startsWith('wp.transition.retire.')) return 'a current application is explicitly marked for retirement or replacement';
   if (workPackage.id === 'wp.architecture.resolve-decisions') return 'architecture findings or assumptions must be confirmed before downstream implementation';
   return 'derived from the selected architecture scope';
 }
@@ -33,12 +39,18 @@ function classificationFor(workPackage) {
   return workPackage.mandatory === false ? 'conditional' : 'mandatory';
 }
 
-function rationaleFor(workPackage, objectIndex) {
-  const sourceNames = sortedUnique((workPackage.sourceIds ?? []).map((id) => {
-    const object = objectIndex.get(id);
-    return object?.name ?? object?.message ?? id;
-  }));
+function displayName(object, fallback) {
+  if (!object) return fallback;
+  if (object.name) return object.name;
+  if (object.message) return object.message;
+  if (object.kind === 'system-replacement' || object.kind === 'integration-replacement') {
+    return `${object.currentId} → ${object.targetId}`;
+  }
+  return fallback;
+}
 
+function rationaleFor(workPackage, objectIndex) {
+  const sourceNames = sortedUnique((workPackage.sourceIds ?? []).map((id) => displayName(objectIndex.get(id), id)));
   if (!sourceNames.length) return 'Required to make the composed architecture implementation-ready.';
   return `Derived from: ${sourceNames.join('; ')}.`;
 }
@@ -72,12 +84,13 @@ export function buildDeliveryRoadmap(result) {
     dependsOn: sortedUnique(workPackage.dependsOn),
     sourceIds: sortedUnique(workPackage.sourceIds),
     classification: classificationFor(workPackage),
-    trigger: triggerFor(workPackage, result),
+    trigger: triggerFor(workPackage),
     rationale: rationaleFor(workPackage, objectIndex),
     labels: sortedUnique([
       `phase:${workPackage.phase}`,
       `scope:${classificationFor(workPackage)}`,
       ...(workPackage.id.startsWith('wp.integration.') ? ['work:integration'] : []),
+      ...(workPackage.id.startsWith('wp.transition.') ? ['work:migration'] : []),
       ...(workPackage.id.includes('security') ? ['work:security'] : []),
       ...(workPackage.id.includes('testing') ? ['work:testing'] : [])
     ])
@@ -117,6 +130,7 @@ export function buildDeliveryRoadmap(result) {
       packageCount: enriched.length,
       mandatoryCount: enriched.filter((item) => item.classification === 'mandatory').length,
       conditionalCount: enriched.filter((item) => item.classification === 'conditional').length,
+      migrationPackageCount: enriched.filter((item) => item.labels.includes('work:migration')).length,
       waveCount: waves.length,
       criticalPackageIds
     }
@@ -127,7 +141,7 @@ export function roadmapToMarkdown(roadmap) {
   const lines = [
     '# Architecture Delivery Roadmap',
     '',
-    `Packages: ${roadmap.summary.packageCount} · Waves: ${roadmap.summary.waveCount} · Mandatory: ${roadmap.summary.mandatoryCount} · Conditional: ${roadmap.summary.conditionalCount}`,
+    `Packages: ${roadmap.summary.packageCount} · Waves: ${roadmap.summary.waveCount} · Mandatory: ${roadmap.summary.mandatoryCount} · Conditional: ${roadmap.summary.conditionalCount}${roadmap.summary.migrationPackageCount ? ` · Migration: ${roadmap.summary.migrationPackageCount}` : ''}`,
     ''
   ];
 
