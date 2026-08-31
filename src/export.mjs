@@ -1,4 +1,4 @@
-import { composeArchitecture, serializeComposition } from './composer.mjs';
+import { composeArchitecture } from './composer.mjs';
 import { buildDeliveryRoadmap, roadmapToMarkdown } from './roadmap.mjs';
 
 const SAFE_CONTEXT_KEYS = ['industry', 'operatingModel', 'processes', 'scale', 'constraints', 'existingSystemIds', 'nfrProfile', 'integrationProfiles'];
@@ -7,6 +7,10 @@ function stableObject(value) {
   if (Array.isArray(value)) return value.map(stableObject);
   if (!value || typeof value !== 'object') return value;
   return Object.fromEntries(Object.keys(value).sort().map((key) => [key, stableObject(value[key])]));
+}
+
+function stableJson(value) {
+  return JSON.stringify(stableObject(value));
 }
 
 export function createShareableContext(context) {
@@ -61,7 +65,7 @@ export function verifyBundleRecomposition(bundle) {
   const context = restoreContextFromBundle(bundle);
   const recomposed = composeArchitecture(context);
   return {
-    matches: serializeComposition(recomposed) === serializeComposition(bundle.blueprint),
+    matches: stableJson(recomposed) === stableJson(bundle.blueprint),
     recomposed
   };
 }
