@@ -5,6 +5,7 @@ import { resolve } from 'node:path';
 import { composeArchitecture, serializeComposition } from '../src/composer.mjs';
 import { diffCompositions } from '../src/diff.mjs';
 import { decideIntegrationPattern } from '../src/integration-decision.mjs';
+import { calculateArchitectureMetrics } from '../src/metrics.mjs';
 import { buildDeliveryRoadmap, roadmapToMarkdown } from '../src/roadmap.mjs';
 import { bundleToMarkdown, createPortableBundle, serializeBundle } from '../src/export.mjs';
 import { toVisualWorkbench, visualWorkbenchMarkdown } from '../src/visual-projection.mjs';
@@ -20,6 +21,7 @@ function usage() {
   node bin/eac.mjs transition <context.json> [--output transition.json]
   node bin/eac.mjs compare <base-context.json> <target-context.json> [--output delta.json]
   node bin/eac.mjs integration <drivers.json> [--output decision.json]
+  node bin/eac.mjs metrics <context.json> [--output metrics.json]
   node bin/eac.mjs roadmap <context.json> [--markdown] [--output roadmap.json|roadmap.md]
   node bin/eac.mjs bundle <context.json> [--private] [--output architecture.bundle.json]
   node bin/eac.mjs report <context.json> [--output architecture-report.md]
@@ -119,6 +121,18 @@ async function main(argv) {
       return;
     }
     await emitJson(decideIntegrationPattern(await readJson(first)), output.path);
+    return;
+  }
+
+  if (command === 'metrics' && first) {
+    const metricsRest = [second, ...rest].filter(Boolean);
+    const output = validateOutput(metricsRest);
+    if (!output.ok) {
+      usage();
+      process.exitCode = 2;
+      return;
+    }
+    await emitJson(calculateArchitectureMetrics(composeArchitecture(await readJson(first))), output.path);
     return;
   }
 
