@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 
 import { composeArchitecture, serializeComposition } from '../src/composer.mjs';
 import { diffCompositions } from '../src/diff.mjs';
+import { buildGlossary, resolveGlossaryAlias } from '../src/glossary.mjs';
 import { decideIntegrationPattern } from '../src/integration-decision.mjs';
 import { calculateArchitectureMetrics } from '../src/metrics.mjs';
 import { buildDeliveryRoadmap, roadmapToMarkdown } from '../src/roadmap.mjs';
@@ -22,6 +23,8 @@ function usage() {
   node bin/eac.mjs compare <base-context.json> <target-context.json> [--output delta.json]
   node bin/eac.mjs integration <drivers.json> [--output decision.json]
   node bin/eac.mjs metrics <context.json> [--output metrics.json]
+  node bin/eac.mjs glossary [--output glossary.json]
+  node bin/eac.mjs resolve <alias> [--kind capability|system-role|data-object|integration-pattern|process]
   node bin/eac.mjs roadmap <context.json> [--markdown] [--output roadmap.json|roadmap.md]
   node bin/eac.mjs bundle <context.json> [--private] [--output architecture.bundle.json]
   node bin/eac.mjs report <context.json> [--output architecture-report.md]
@@ -35,6 +38,11 @@ function outputPath(rest) {
   const index = rest.indexOf('--output');
   if (index < 0) return null;
   return rest[index + 1] ?? null;
+}
+
+function optionValue(rest, option) {
+  const index = rest.indexOf(option);
+  return index < 0 ? null : rest[index + 1] ?? null;
 }
 
 function validateOutput(rest) {
@@ -133,6 +141,33 @@ async function main(argv) {
       return;
     }
     await emitJson(calculateArchitectureMetrics(composeArchitecture(await readJson(first))), output.path);
+    return;
+  }
+
+  if (command === 'glossary') {
+    const glossaryRest = [first, second, ...rest].filter(Boolean);
+    const output = validateOutput(glossaryRest);
+    if (!output.ok) {
+      usage();
+      process.exitCode = 2;
+      return;
+    }
+    await emitJson(buildGlossary(), output.path);
+    return;
+  }
+
+  if (command === 'resolve' && first) {
+    const resolveRest = [second, ...rest].filter(Boolean);
+    const kind = optionValue(resolveRest, '--kind');
+    if (resolveRest.includes('--kind') && !kind) {
+      usage();
+      process.exitCode = 2;
+      return;
+    }
+    const resolved = resolveGlossaryAlias(first, kind ? { kind } : {});
+    await emitJson(resolved);
+    if (resolved.status === 'ambiguous') process.exitCode = 4;
+    else if (resolved.status === 'unknown') process.exitCode = 5;
     return;
   }
 
