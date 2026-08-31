@@ -1,6 +1,6 @@
 {
   "name": "enterprise-architecture-composer",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "Explainable enterprise architecture synthesis from business context and constraints.",
@@ -10,8 +10,11 @@
   "scripts": {
     "compose:demo": "node bin/eac.mjs compose examples/scenarios/global-b2b-manufacturer.context.json",
     "compare:demo": "node bin/eac.mjs compare examples/scenarios/o2c-starter.context.json examples/scenarios/global-b2b-manufacturer.context.json",
+    "roadmap:demo": "node bin/eac.mjs roadmap examples/scenarios/global-b2b-manufacturer.context.json --markdown",
+    "report:demo": "node bin/eac.mjs report examples/scenarios/global-b2b-manufacturer.context.json",
+    "visual:demo": "node bin/eac.mjs visual examples/scenarios/global-b2b-manufacturer.context.json",
     "test": "node --test",
-    "check": "node --check src/catalog.mjs && node --check src/rulebook.mjs && node --check src/engine.mjs && node --check src/diff.mjs && node --check src/app.mjs && node --check bin/eac.mjs"
+    "check": "node --check src/catalog.mjs && node --check src/rulebook.mjs && node --check src/engine.mjs && node --check src/composer.mjs && node --check src/integration-decision.mjs && node --check src/roadmap.mjs && node --check src/export.mjs && node --check src/visual-projection.mjs && node --check src/diff.mjs && node --check src/app.mjs && node --check bin/eac.mjs"
   },
   "engines": {
     "node": ">=20"
