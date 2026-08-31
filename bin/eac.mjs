@@ -4,11 +4,18 @@ import { resolve } from 'node:path';
 
 import { composeArchitecture, serializeComposition } from '../src/engine.mjs';
 import { diffCompositions } from '../src/diff.mjs';
+import { decideIntegrationPattern } from '../src/integration-decision.mjs';
+import { buildDeliveryRoadmap, roadmapToMarkdown } from '../src/roadmap.mjs';
+import { bundleToMarkdown, createPortableBundle, serializeBundle } from '../src/export.mjs';
 
 function usage() {
   console.error(`Usage:
   node bin/eac.mjs compose <context.json> [--output blueprint.json]
-  node bin/eac.mjs compare <base-context.json> <target-context.json> [--output delta.json]`);
+  node bin/eac.mjs compare <base-context.json> <target-context.json> [--output delta.json]
+  node bin/eac.mjs integration <drivers.json> [--output decision.json]
+  node bin/eac.mjs roadmap <context.json> [--markdown] [--output roadmap.json|roadmap.md]
+  node bin/eac.mjs bundle <context.json> [--private] [--output architecture.bundle.json]
+  node bin/eac.mjs report <context.json> [--output architecture-report.md]`);
 }
 
 function outputPath(rest) {
@@ -17,14 +24,25 @@ function outputPath(rest) {
   return rest[index + 1] ?? null;
 }
 
+function validateOutput(rest) {
+  const path = outputPath(rest);
+  if (rest.includes('--output') && !path) return { ok: false, path: null };
+  return { ok: true, path };
+}
+
 async function readJson(path) {
   return JSON.parse(await readFile(resolve(process.cwd(), path), 'utf8'));
 }
 
-async function emit(value, path = null) {
+async function emitJson(value, path = null) {
   const serialized = `${JSON.stringify(value, null, 2)}\n`;
   if (path) await writeFile(resolve(process.cwd(), path), serialized, 'utf8');
   else process.stdout.write(serialized);
+}
+
+async function emitText(value, path = null) {
+  if (path) await writeFile(resolve(process.cwd(), path), value, 'utf8');
+  else process.stdout.write(value);
 }
 
 async function main(argv) {
@@ -32,22 +50,22 @@ async function main(argv) {
 
   if (command === 'compose' && first) {
     const composeRest = [second, ...rest].filter(Boolean);
-    const path = outputPath(composeRest);
-    if (composeRest.includes('--output') && !path) {
+    const output = validateOutput(composeRest);
+    if (!output.ok) {
       usage();
       process.exitCode = 2;
       return;
     }
 
     const result = composeArchitecture(await readJson(first));
-    if (path) await writeFile(resolve(process.cwd(), path), serializeComposition(result), 'utf8');
+    if (output.path) await writeFile(resolve(process.cwd(), output.path), serializeComposition(result), 'utf8');
     else process.stdout.write(serializeComposition(result));
     return;
   }
 
   if (command === 'compare' && first && second) {
-    const path = outputPath(rest);
-    if (rest.includes('--output') && !path) {
+    const output = validateOutput(rest);
+    if (!output.ok) {
       usage();
       process.exitCode = 2;
       return;
@@ -55,7 +73,62 @@ async function main(argv) {
 
     const base = composeArchitecture(await readJson(first));
     const target = composeArchitecture(await readJson(second));
-    await emit(diffCompositions(base, target), path);
+    await emitJson(diffCompositions(base, target), output.path);
+    return;
+  }
+
+  if (command === 'integration' && first) {
+    const integrationRest = [second, ...rest].filter(Boolean);
+    const output = validateOutput(integrationRest);
+    if (!output.ok) {
+      usage();
+      process.exitCode = 2;
+      return;
+    }
+    await emitJson(decideIntegrationPattern(await readJson(first)), output.path);
+    return;
+  }
+
+  if (command === 'roadmap' && first) {
+    const roadmapRest = [second, ...rest].filter(Boolean);
+    const output = validateOutput(roadmapRest);
+    if (!output.ok) {
+      usage();
+      process.exitCode = 2;
+      return;
+    }
+    const roadmap = buildDeliveryRoadmap(composeArchitecture(await readJson(first)));
+    if (roadmapRest.includes('--markdown')) await emitText(roadmapToMarkdown(roadmap), output.path);
+    else await emitJson(roadmap, output.path);
+    return;
+  }
+
+  if (command === 'bundle' && first) {
+    const bundleRest = [second, ...rest].filter(Boolean);
+    const output = validateOutput(bundleRest);
+    if (!output.ok) {
+      usage();
+      process.exitCode = 2;
+      return;
+    }
+    const bundle = createPortableBundle(composeArchitecture(await readJson(first)), {
+      shareable: !bundleRest.includes('--private')
+    });
+    if (output.path) await writeFile(resolve(process.cwd(), output.path), serializeBundle(bundle), 'utf8');
+    else process.stdout.write(serializeBundle(bundle));
+    return;
+  }
+
+  if (command === 'report' && first) {
+    const reportRest = [second, ...rest].filter(Boolean);
+    const output = validateOutput(reportRest);
+    if (!output.ok) {
+      usage();
+      process.exitCode = 2;
+      return;
+    }
+    const bundle = createPortableBundle(composeArchitecture(await readJson(first)));
+    await emitText(bundleToMarkdown(bundle), output.path);
     return;
   }
 
