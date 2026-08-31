@@ -193,14 +193,36 @@ function conflictDiagnostics(drivers) {
   return conflicts;
 }
 
+function semanticPriority(drivers) {
+  if (drivers.purpose === 'analytics') return ['pattern.etl-elt', 'pattern.cdc', 'pattern.batch-file', 'pattern.async-message'];
+  if (drivers.purpose === 'partner-document' || drivers.partnerBoundary) return ['pattern.edi-b2b', 'pattern.async-message', 'pattern.batch-file'];
+  if (drivers.purpose === 'replication') return ['pattern.cdc', 'pattern.domain-event', 'pattern.async-message', 'pattern.batch-file'];
+  if (drivers.purpose === 'business-event' && drivers.fanOut >= 2) return ['pattern.domain-event', 'pattern.async-message'];
+  if (drivers.immediateResponse || drivers.latency === 'immediate') return ['pattern.sync-api', 'pattern.async-message'];
+  if (drivers.purpose === 'command' || drivers.purpose === 'state-transfer') return ['pattern.async-message', 'pattern.sync-api', 'pattern.batch-file'];
+  return INTEGRATION_PATTERN_IDS;
+}
+
+function selectEvaluation(evaluations, drivers) {
+  const viable = evaluations.filter((item) => ['preferred', 'acceptable'].includes(item.fit));
+  if (!viable.length) return null;
+  const priority = semanticPriority(drivers);
+  return [...viable].sort((a, b) => {
+    const fit = FIT_ORDER[a.fit] - FIT_ORDER[b.fit];
+    if (fit) return fit;
+    const ai = priority.indexOf(a.patternId);
+    const bi = priority.indexOf(b.patternId);
+    const ar = ai < 0 ? 999 : ai;
+    const br = bi < 0 ? 999 : bi;
+    return ar - br || a.patternId.localeCompare(b.patternId);
+  })[0];
+}
+
 export function decideIntegrationPattern(input = {}) {
   const drivers = normalizeIntegrationDrivers(input);
   const evaluations = evaluateIntegrationPatterns(drivers);
   const conflicts = conflictDiagnostics(drivers);
-  const preferred = evaluations.filter((item) => item.fit === 'preferred');
-  const viable = evaluations.filter((item) => ['preferred', 'acceptable'].includes(item.fit));
-
-  const selected = preferred[0] ?? viable[0] ?? null;
+  const selected = selectEvaluation(evaluations, drivers);
   return {
     drivers,
     selected,
