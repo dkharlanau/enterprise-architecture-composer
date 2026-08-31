@@ -1,7 +1,7 @@
-import { composeArchitecture, serializeComposition } from './engine.mjs';
+import { composeArchitecture, serializeComposition } from './composer.mjs';
 import { buildDeliveryRoadmap, roadmapToMarkdown } from './roadmap.mjs';
 
-const SAFE_CONTEXT_KEYS = ['industry', 'operatingModel', 'processes', 'scale', 'constraints', 'existingSystemIds'];
+const SAFE_CONTEXT_KEYS = ['industry', 'operatingModel', 'processes', 'scale', 'constraints', 'existingSystemIds', 'nfrProfile', 'integrationProfiles'];
 
 function stableObject(value) {
   if (Array.isArray(value)) return value.map(stableObject);
@@ -51,7 +51,9 @@ export function restoreContextFromBundle(bundle) {
     processes: stored.processes,
     scale: stored.scale,
     constraints: stored.constraints,
-    existingSystems: stored.existingSystemIds ?? []
+    existingSystems: stored.existingSystemIds ?? [],
+    ...(stored.nfrProfile ? { nfrProfile: stored.nfrProfile } : {}),
+    ...(stored.integrationProfiles ? { integrationProfiles: stored.integrationProfiles } : {})
   };
 }
 
@@ -101,7 +103,11 @@ export function bundleToMarkdown(bundle) {
 
   lines.push('', '### Integrations', '');
   for (const integration of result.blueprint.integrations) {
+    const nfrDecision = integration.decisionAnalysis;
     lines.push(`- **${integration.name}** — ${integration.patternName}; \`${integration.source}\` → \`${integration.target}\`; rules: ${integration.ruleIds.join(', ')}`);
+    if (nfrDecision && !nfrDecision.selectedMatchesBlueprint) {
+      lines.push(`  - NFR review: ${nfrDecision.recommendedPatternId} is currently preferred by the explicit driver profile.`);
+    }
   }
 
   lines.push('', '## Architecture findings', '');
@@ -125,6 +131,12 @@ export function bundleToMarkdown(bundle) {
     lines.push(`- Because: ${recommendation.because.join('; ')}`);
     lines.push(`- Rule(s): ${recommendation.ruleIds.join(', ')}`);
     if (recommendation.alternatives?.length) lines.push(`- Alternatives: ${recommendation.alternatives.join(', ')}`);
+    if (recommendation.alternativeAnalysis?.length) {
+      lines.push('- Alternative analysis:');
+      for (const alternative of recommendation.alternativeAnalysis) {
+        lines.push(`  - ${alternative.label}: ${alternative.fit}${alternative.tradeoffs.length ? ` — ${alternative.tradeoffs.join('; ')}` : ''}`);
+      }
+    }
     lines.push('');
   }
 
