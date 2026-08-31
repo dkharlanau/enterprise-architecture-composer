@@ -2,144 +2,313 @@
 
 **Configure the business. Compose the architecture. Explain every decision.**
 
-Enterprise Architecture Composer turns a structured business context into an explainable target architecture blueprint and an implementation roadmap.
+Enterprise Architecture Composer turns structured business context and constraints into an explainable target architecture, scenario delta and implementation roadmap.
 
-It is not another diagram editor, CMDB, application portfolio repository, or process modeler. The core question is different:
+It is not another diagram editor, CMDB, application portfolio repository or process modeler. Its question is different:
 
-> Given this business model, process scope, existing landscape and constraints, what architecture should we build — and why?
+> Given this business model, process scope, existing landscape and non-functional constraints, what architecture should we build — what remains undecided, and why?
 
-The first public slice focuses on a global B2B manufacturing company. A user selects business processes, operating constraints and existing systems; the composer deterministically derives capabilities, system responsibilities, integration needs, data ownership, architecture gaps and work packages.
+The current reference slice models a global B2B manufacturing company. The composer deterministically derives business capabilities, system responsibilities, data ownership, integration needs, architecture findings and delivery work packages. No LLM is required.
 
-## Try the reference scenario
+## What works now
 
-The browser workbench is zero-backend and can be served from the repository root. The same core also runs from Node:
+```text
+business context + current landscape + NFRs
+                    │
+                    ▼
+          deterministic composition
+                    │
+       ┌────────────┼─────────────┐
+       ▼            ▼             ▼
+   blueprint    decisions       findings
+       │            │             │
+       └────────────┼─────────────┘
+                    ▼
+          dependency roadmap
+                    │
+        ┌───────────┼──────────────┐
+        ▼           ▼              ▼
+ Process-as-Code  Interface-as-Code  Visual Workbench
+      starter       proposal/adopt     projection
+
+baseline ──────┐
+               ├── scenario delta ──> impact seeds
+changed input ─┘
+```
+
+The public Composer surface is currently **v0.2.0**.
+
+## Quick start
+
+No runtime package installation is required for the current alpha.
 
 ```bash
 npm test
-node bin/eac.mjs compose examples/scenarios/global-b2b-manufacturer.context.json
-node bin/eac.mjs compose examples/scenarios/global-b2b-manufacturer.context.json --output blueprint.json
+
+# Compose a target architecture
+node bin/eac.mjs compose \
+  examples/scenarios/global-b2b-manufacturer.context.json
+
+# Compare two scenarios
 node bin/eac.mjs compare \
   examples/scenarios/o2c-starter.context.json \
   examples/scenarios/global-b2b-manufacturer.context.json
+
+# Generate an explainable dependency roadmap
+node bin/eac.mjs roadmap \
+  examples/scenarios/global-b2b-manufacturer.context.json \
+  --markdown
+
+# Create a portable Git-reviewable bundle
+node bin/eac.mjs bundle \
+  examples/scenarios/global-b2b-manufacturer.context.json \
+  --output architecture.bundle.json
+
+# Produce a human architecture review report
+node bin/eac.mjs report \
+  examples/scenarios/global-b2b-manufacturer.context.json \
+  --output architecture-report.md
+
+# Emit the same model for Visual Workbench
+node bin/eac.mjs visual \
+  examples/scenarios/global-b2b-manufacturer.context.json \
+  --output architecture.visual.json
 ```
 
-No runtime package install is required for the current alpha.
+## Architecture decisions, not technology guesses
 
-## Product loop
+Integration recommendations use explicit drivers rather than vendor preference or a hidden score:
+
+- latency;
+- consistency;
+- volume;
+- fan-out;
+- ordering;
+- replay;
+- offline tolerance;
+- partner boundary;
+- payload size;
+- change frequency;
+- business purpose.
+
+The decision kernel evaluates synchronous API, asynchronous message, domain event, EDI/B2B, file/batch, CDC/replication and ETL/ELT.
+
+A result is categorical: `preferred`, `acceptable`, `disfavored` or `incompatible`. Each option carries reasons and trade-offs. If requirements conflict — for example immediate final response plus extended offline tolerance — Composer emits an unresolved architecture decision instead of hiding the conflict behind a technology choice.
+
+Global and per-flow NFR profiles are part of the public context contract:
+
+```json
+{
+  "processes": ["order-to-cash"],
+  "nfrProfile": {
+    "volume": "high",
+    "replay": "desirable"
+  },
+  "integrationProfiles": {
+    "integration.delivery-to-warehouse": {
+      "latency": "hours",
+      "consistency": "snapshot",
+      "payloadSize": "very-large",
+      "offlineTolerance": "extended"
+    }
+  }
+}
+```
+
+An explicit NFR profile may challenge the catalog-default pattern. Composer then creates a finding for human confirmation; it does **not** silently rewrite the architecture.
+
+## Delivery roadmap
+
+A composed architecture can be projected into an implementation roadmap with deterministic dependency waves.
+
+Every package contains:
+
+- stable work-package ID;
+- phase;
+- mandatory or conditional classification;
+- trigger;
+- rationale;
+- source architecture objects;
+- dependencies;
+- deterministic execution wave;
+- reusable labels for later GitHub/Jira handoff.
+
+Conditional work is explicit. For example, legacy-WMS coexistence exists only when the context says that the WMS must be retained.
+
+## What-if analysis
+
+The browser workbench and CLI support baseline → target comparison.
 
 ```text
-Enterprise context
-  industry / operating model / processes / scale / current landscape / constraints
-                                 │
-                                 ▼
-                         deterministic rules
-                                 │
-               ┌─────────────────┼─────────────────┐
-               ▼                 ▼                 ▼
-         target blueprint   decision trace    architecture gaps
-               │                 │                 │
-               └─────────────────┼──────────────────┘
-                                 ▼
-                         delivery work packages
-                                 │
-             ┌───────────────────┼────────────────────┐
-             ▼                   ▼                    ▼
-       Process as Code    Interface as Code     Visual Workbench
-
-baseline scenario ───────┐
-                         ├── deterministic delta ──> impact seeds
-changed context ─────────┘
+added / removed / changed
+  processes
+  capabilities
+  systems
+  integrations
+  data ownership
+  findings
+  work packages
 ```
 
-## What the composer owns
+The delta keeps rule/reason traces and emits compact `impactSeeds`, creating a clean future handoff to [Enterprise Change Graph](https://github.com/dkharlanau/enterprise-change-graph).
 
-The composer owns **proposal semantics**: input context, catalog selections, architecture recommendations, rule traces, unresolved questions, scenario deltas and generated work-package proposals.
+## Portable architecture bundle
 
-It deliberately does not become the long-term semantic owner of every downstream artifact:
+`eac bundle` creates a deterministic, Git-reviewable architecture package containing:
 
-- maintained process semantics belong in [Process as Code](https://github.com/dkharlanau/process-as-code);
-- operational integration contracts belong in [Interface as Code](https://github.com/dkharlanau/interface-as-code);
-- field/value transformation intent belongs in [Mapping as Code](https://github.com/dkharlanau/mapping-as-code);
-- change-specific impact analysis belongs in [Enterprise Change Graph](https://github.com/dkharlanau/enterprise-change-graph);
-- presentation/rendering can be delegated to [Visual Workbench](https://github.com/dkharlanau/visual-workbench).
+- normalized context;
+- engine/catalog/schema versions;
+- complete blueprint;
+- recommendations and findings;
+- delivery roadmap;
+- privacy mode.
 
-This keeps the composer useful as an architecture synthesis layer instead of turning it into a universal writable enterprise graph.
+Shareable bundles whitelist known Composer context fields instead of copying arbitrary company metadata. Re-import is tested by recomposing the context and verifying semantic equivalence with the stored blueprint, including explicit NFR profiles.
 
-## Design principles
+## Governed downstream handoff
 
-1. **Intent in, explainable blueprint out.** Every recommendation must expose the facts and rules that caused it.
-2. **Deterministic before AI.** The reference composer works without an LLM. AI may later help structure input, but it does not become the source of truth.
-3. **Vendor-neutral core.** Vendor and industry mappings are optional packs over stable core concepts.
-4. **One coherent scenario before broad coverage.** The first reference pack is manufacturing, not a shallow encyclopedia of thousands of products.
-5. **Unknown is a valid result.** Conflicting or missing requirements become explicit architecture questions instead of guessed answers.
-6. **No vanity architecture score.** Prefer concrete coverage/gap metrics and categorical decisions over opaque weighted scores.
-7. **Current and target state are different facts.** Future migration support must represent keep/introduce/replace/retire semantics explicitly.
-8. **Rendering is a boundary.** Composition semantics are independent from the visual engine.
+Composer owns **proposal semantics**, not permanent downstream truth.
 
-## First reference scenario
+### Process as Code
 
-A global B2B manufacturer with multiple legal entities, plants and warehouses can compose a blueprint across:
+```bash
+node bin/eac.mjs process-starter \
+  examples/scenarios/global-b2b-manufacturer.context.json \
+  order-to-cash \
+  --output order-to-cash.process.json
+```
 
-- Order to Cash
-- Procure to Pay
-- Plan to Produce
-- Returns
-- Intercompany
-- Record to Report
+The generated Process-as-Code v0.2 starter preserves process ID, capabilities, systems, data objects, interface scope and Composer provenance. It deliberately contains a non-executable `refine_process_flow` subprocess instead of inventing human tasks, approvals or gateways the architecture catalog does not know.
 
-Reference system roles include CRM, ERP, MDM, WMS, MES, TMS, Integration Platform, Data Platform and Partner Edge. Core data objects include Customer, Product/Material, Supplier, Price, Sales Order, Purchase Order, Delivery, Inventory, Production Order and Invoice.
+After adoption, maintained process semantics belong to [Process as Code](https://github.com/dkharlanau/process-as-code).
 
-The first integration decision model distinguishes synchronous API, asynchronous message, domain event, EDI/B2B, file/batch, CDC/replication and ETL/ELT using explicit drivers such as latency, fan-out, volume, consistency, replay and partner boundaries.
+### Interface as Code
 
-## Current executable surface
+Integration handoff is deliberately two-stage:
+
+```bash
+# 1. Export what Composer actually knows plus unresolved operational decisions
+node bin/eac.mjs interface-proposal \
+  examples/scenarios/global-b2b-manufacturer.context.json \
+  integration.sales-order-request \
+  --output proposal.json
+
+# 2. Add explicit adoption decisions and create the Interface-as-Code contract
+node bin/eac.mjs interface-adopt \
+  proposal.json \
+  examples/handoff/interface-adoption-decisions.sample.json \
+  --output interface.json
+```
+
+The proposal does not invent delivery guarantees, idempotency, retry, monitoring ownership or reconciliation semantics. Only after those required decisions are supplied does Composer emit an Interface-as-Code v1.0-compatible proposed contract with design provenance.
+
+After adoption, the operational contract belongs to [Interface as Code](https://github.com/dkharlanau/interface-as-code).
+
+## Visual boundary
+
+Composer can emit a coordinate-free projection using the published semantic vocabulary of [Visual Workbench](https://github.com/dkharlanau/visual-workbench).
+
+Named projections include:
+
+- executive architecture;
+- integration landscape;
+- data ownership;
+- open architecture decisions.
+
+Composer source IDs remain Visual Workbench node IDs, so rendering can evolve without creating a second semantic source of truth.
+
+## Browser workbench
+
+The zero-backend workbench currently exposes five views over one composition:
+
+**Blueprint · Integrations · Data · Roadmap · Delta**
+
+The UX is intentionally closer to an engineering workbench than a generic AI dashboard: context on the left, composed architecture in the center and explanation/decision trace on the right.
+
+`Set baseline` freezes the current scenario; changing processes or constraints then exposes the architecture delta.
+
+The browser UI still needs its next polish pass to expose the complete v0.2 NFR/handoff surface directly. The CLI and deterministic modules are currently ahead of the browser controls.
+
+## Reference manufacturing catalog
+
+The first coherent slice covers:
+
+- Order to Cash;
+- Procure to Pay;
+- Plan to Produce;
+- Returns;
+- Intercompany;
+- Record to Report.
+
+Reference responsibilities include CRM, ERP, MDM, WMS, MES, TMS, Integration Platform, Data Platform and Partner Edge. Core data objects include Customer, Product/Material, Supplier, Price, Sales Order, Purchase Order, Delivery, Inventory, Production Order and Invoice.
+
+The core remains vendor-neutral. SAP, Microsoft, Salesforce and industry-specific mappings are planned as separate packs rather than being embedded into the composition language.
+
+## Repository map
 
 ```text
 src/
-  catalog.mjs       manufacturing reference knowledge
-  rulebook.mjs      versioned architecture rule inventory
-  engine.mjs        deterministic composition rules
-  diff.mjs          baseline → target architecture delta
-  app.mjs           browser workbench
-bin/
-  eac.mjs           compose + compare CLI
-schemas/
-  context.schema.json
-  blueprint.schema.json
-examples/scenarios/ three materially different reference contexts
-tests/              engine + rules + golden + diff + static smoke fixtures
-styles.css          product visual system
-index.html          zero-backend public app
-.github/workflows/  CI + Pages deployment workflow
-```
+  catalog.mjs                 manufacturing reference knowledge
+  rulebook.mjs                versioned architecture rule inventory
+  engine.mjs                  stable v0.1 deterministic foundation
+  composer.mjs                public v0.2 NFR-aware composition layer
+  integration-decision.mjs    explainable pattern comparison
+  roadmap.mjs                 dependency waves + rationale
+  diff.mjs                    baseline → target architecture delta
+  export.mjs                  portable bundles + decision reports
+  visual-projection.mjs       Visual Workbench semantic projection
+  handoff.mjs                 Process/Interface downstream handoff
+  app.mjs                     zero-backend browser workbench
 
-The workbench has five projections over the same composition: **Blueprint**, **Integrations**, **Data**, **Roadmap**, and **Delta**. `Set baseline` freezes the current composition; changing scope or constraints then shows added, removed and changed architecture/delivery objects. Selecting an architecture object opens its recommendation trace, rule IDs, findings and delivery impact.
+bin/eac.mjs                   public CLI
+schemas/                      context + blueprint contracts
+examples/scenarios/           materially different reference contexts
+examples/handoff/             explicit adoption-decision examples
+tests/                        unit, golden, roundtrip, CLI and static smoke tests
+index.html + styles.css        public browser product
+.github/workflows/             CI + manual-bootstrap Pages deployment
+```
 
 ## Contract and rule discipline
 
-- Context and result formats are published as JSON Schema drafts under `schemas/`.
-- `src/rulebook.mjs` currently defines 30 stable rule IDs; implemented rules are explicitly distinguished from experimental contracts.
-- Three reference scenario files are exercised by CI.
-- Golden tests make architecture-count drift explicit during review.
-- Scenario diff never mutates the baseline and emits compact `impactSeeds` for downstream change analysis.
-- The engine uses stable IDs, sorted output, no random IDs, no network calls and no wall-clock data.
-- `AGENTS.md` defines the autonomous development contract.
+- Context and result formats are published under `schemas/`.
+- The rulebook currently contains **31 stable rule IDs**; implemented and experimental guidance are distinguished explicitly.
+- Three reference scenarios are protected by golden architecture summaries.
+- High-volume analytics, NFR bundle round-trip and downstream handoff have explicit regression tests.
+- The public CLI is tested end to end.
+- Core composition uses stable IDs, sorted results, no random IDs, no network calls and no wall-clock data.
+- Unknowns remain unknown until a human or authoritative downstream source resolves them.
+
+## Product boundaries
+
+The Composer does not become a universal writable enterprise graph.
+
+- Process semantics → [Process as Code](https://github.com/dkharlanau/process-as-code)
+- Integration operations → [Interface as Code](https://github.com/dkharlanau/interface-as-code)
+- Mapping semantics → [Mapping as Code](https://github.com/dkharlanau/mapping-as-code)
+- Change-specific impact → [Enterprise Change Graph](https://github.com/dkharlanau/enterprise-change-graph)
+- Rendering → [Visual Workbench](https://github.com/dkharlanau/visual-workbench)
+
+This repository remains the synthesis and architecture-decision layer above those specialized artifacts.
 
 ## GitHub Pages bootstrap
 
-The repository contains a Pages workflow, but GitHub requires Pages to be enabled once for a brand-new repository. In **Settings → Pages**, choose **GitHub Actions** as the source; then run **Deploy GitHub Pages** from the Actions tab. The first enablement cannot be performed with the workflow's default `GITHUB_TOKEN`.
+The Pages deployment workflow is present, but GitHub requires Pages to be enabled once for a brand-new repository. In **Settings → Pages**, choose **GitHub Actions** as the source, then run **Deploy GitHub Pages** from Actions.
 
-After bootstrap, the intended project URL is:
+The first enablement cannot be performed with the workflow's default `GITHUB_TOKEN`.
+
+Intended public URL after verification:
 
 `https://dkharlanau.github.io/enterprise-architecture-composer/`
 
-## Backlog
-
-GitHub Issues are the execution source of truth. The foundation already includes the domain model, deterministic synthesis engine, manufacturing catalog, CI/golden fixtures and scenario delta. Remaining P0 work focuses on deeper integration-decision reasoning, roadmap semantics, workbench polish and public Pages verification.
-
-See [`PRODUCT.md`](PRODUCT.md), [`ARCHITECTURE.md`](ARCHITECTURE.md), [`BACKLOG.md`](BACKLOG.md), [`AGENTS.md`](AGENTS.md), the [`schemas/`](schemas/) and [`examples/scenarios/`](examples/scenarios/) directories.
+The portfolio must not mark that URL `live` until the deployment has actually been verified.
 
 ## Status
 
-**Executable early alpha.** The deterministic engine, manufacturing reference catalog, browser workbench, scenario comparison, CLI, schemas, rulebook and CI are implemented. GitHub Pages activation is the remaining manual bootstrap step before the public demo URL can be verified.
+**v0.2 executable alpha.** Deterministic composition, NFR-aware integration decisions, scenario delta, dependency roadmap, portable review bundles, Process-as-Code starter handoff, Interface-as-Code proposal/adoption handoff, Visual Workbench projection and CI are implemented.
+
+The next product loop is browser-workbench v0.2 parity, richer diagnostics/current→transition→target semantics and actual cross-repository rendering/adoption workflows.
+
+See [`PRODUCT.md`](PRODUCT.md), [`ARCHITECTURE.md`](ARCHITECTURE.md), [`BACKLOG.md`](BACKLOG.md), [`AGENTS.md`](AGENTS.md), [`schemas/`](schemas/) and [`examples/`](examples/).
 
 MIT License.
