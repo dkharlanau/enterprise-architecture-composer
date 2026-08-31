@@ -1,6 +1,7 @@
 import { composeArchitecture as composeBase } from './engine.mjs';
 import { decideIntegrationPattern } from './integration-decision.mjs';
 import { analyzeArchitectureQuality } from './quality.mjs';
+import { buildTransitionArchitecture } from './transition.mjs';
 
 function defaultPurpose(integration) {
   const map = {
@@ -40,6 +41,10 @@ function mergeProfile(integration, result, input) {
 
 function sortedUnique(values = []) {
   return [...new Set(values)].sort((a, b) => a.localeCompare(b));
+}
+
+function uniqueById(items = []) {
+  return [...new Map(items.map((item) => [item.id, item])).values()].sort((a, b) => a.id.localeCompare(b.id));
 }
 
 export function composeArchitecture(input = {}) {
@@ -104,7 +109,8 @@ export function composeArchitecture(input = {}) {
   const context = {
     ...result.context,
     ...(input.nfrProfile ? { nfrProfile: structuredClone(input.nfrProfile) } : {}),
-    ...(Object.keys(integrationProfiles).length ? { integrationProfiles } : {})
+    ...(Object.keys(integrationProfiles).length ? { integrationProfiles } : {}),
+    ...(input.currentLandscape ? { currentLandscape: structuredClone(input.currentLandscape) } : {})
   };
 
   const draft = {
@@ -117,24 +123,37 @@ export function composeArchitecture(input = {}) {
   };
 
   const quality = analyzeArchitectureQuality(draft);
-  const findings = [...new Map([...draft.findings, ...quality.findings].map((item) => [item.id, item])).values()]
-    .sort((a, b) => a.id.localeCompare(b.id));
+  const transition = buildTransitionArchitecture(draft, input.currentLandscape ?? null);
+  const findings = uniqueById([
+    ...draft.findings,
+    ...quality.findings,
+    ...(transition?.findings ?? [])
+  ]);
 
   const decisionFindingIds = findings
     .filter((item) => item.severity !== 'info')
     .map((item) => item.id);
-  const workPackages = result.workPackages.map((item) => item.id === 'wp.architecture.resolve-decisions'
+  const baseWorkPackages = result.workPackages.map((item) => item.id === 'wp.architecture.resolve-decisions'
     ? { ...item, sourceIds: sortedUnique([...(item.sourceIds ?? []), ...decisionFindingIds]) }
     : item);
+  const workPackages = uniqueById([...baseWorkPackages, ...(transition?.workPackages ?? [])]);
 
   return {
     ...draft,
     findings,
     workPackages,
+    ...(transition ? { transition: { ...transition, findings: undefined, workPackages: undefined } } : {}),
     metrics: {
       ...result.metrics,
       findingCount: findings.length,
-      ...quality.metrics
+      workPackageCount: workPackages.length,
+      ...quality.metrics,
+      ...(transition ? {
+        transitionSystemCount: transition.systems.length,
+        transitionIntegrationCount: transition.integrations.length,
+        replacementCount: transition.replacements.length,
+        coexistenceWindowCount: transition.coexistenceWindows.length
+      } : {})
     }
   };
 }
