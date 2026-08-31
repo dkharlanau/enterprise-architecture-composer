@@ -34,6 +34,9 @@ export const RULEBOOK = [
   { id: 'SEC-SENSITIVE-001', family: 'security', implemented: false, maturity: 'experimental', description: 'Sensitive or regulated data movement requires explicit access, residency and audit decisions.' },
   { id: 'MIG-WMS-001', family: 'migration', implemented: true, maturity: 'fixture-backed', description: 'Retained legacy WMS requires an explicit coexistence and retirement boundary.' },
   { id: 'MIG-REPLACE-001', family: 'migration', implemented: false, maturity: 'experimental', description: 'A replacement requires introduce-before-retire dependencies and an explicit coexistence window.' },
+  { id: 'QUALITY-CAPABILITY-001', family: 'quality', implemented: true, maturity: 'fixture-backed', description: 'Every in-scope capability needs at least one justified supporting system responsibility in the reference model.' },
+  { id: 'QUALITY-PROCESS-INTEGRATION-001', family: 'quality', implemented: true, maturity: 'fixture-backed', description: 'A process spanning multiple system roles needs explicit handoffs that connect participating roles.' },
+  { id: 'QUALITY-SYSTEM-JUSTIFICATION-001', family: 'quality', implemented: true, maturity: 'fixture-backed', description: 'Every target system responsibility must be justified by process scope, a deterministic rule or an explicit architecture recommendation.' },
   { id: 'DELIVERY-TEST-001', family: 'delivery', implemented: true, maturity: 'fixture-backed', description: 'Cross-system architecture requires end-to-end and failure-path test scope.' },
   { id: 'DELIVERY-CUTOVER-001', family: 'delivery', implemented: false, maturity: 'experimental', description: 'Stateful system replacement requires cutover checkpoints, reconciliation and rollback criteria.' }
 ];
