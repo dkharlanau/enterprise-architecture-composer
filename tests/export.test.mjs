@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { composeArchitecture } from '../src/engine.mjs';
+import { composeArchitecture } from '../src/composer.mjs';
 import {
   bundleToMarkdown,
   createPortableBundle,
@@ -10,7 +10,7 @@ import {
   verifyBundleRecomposition
 } from '../src/export.mjs';
 
-test('portable bundle recomposes to the identical blueprint', () => {
+test('portable bundle recomposes to the identical public Composer blueprint', () => {
   const result = composeArchitecture({
     industry: 'manufacturing',
     operatingModel: 'b2b',
@@ -22,10 +22,33 @@ test('portable bundle recomposes to the identical blueprint', () => {
   const verification = verifyBundleRecomposition(bundle);
   const restored = restoreContextFromBundle(bundle);
 
+  assert.equal(result.engineVersion, '0.2.0');
   assert.equal(verification.matches, true);
   assert.deepEqual(restored.existingSystems, bundle.context.existingSystemIds);
   assert.deepEqual(restored.processes, bundle.context.processes);
   assert.deepEqual(restored.constraints, bundle.context.constraints);
+});
+
+test('portable bundle preserves explicit NFR profiles across roundtrip', () => {
+  const result = composeArchitecture({
+    processes: ['order-to-cash'],
+    nfrProfile: { volume: 'high', replay: 'desirable' },
+    integrationProfiles: {
+      'integration.delivery-to-warehouse': {
+        latency: 'hours',
+        consistency: 'snapshot',
+        payloadSize: 'very-large',
+        offlineTolerance: 'extended'
+      }
+    }
+  });
+  const bundle = createPortableBundle(result);
+  const restored = restoreContextFromBundle(bundle);
+  const verification = verifyBundleRecomposition(bundle);
+
+  assert.deepEqual(restored.nfrProfile, result.context.nfrProfile);
+  assert.deepEqual(restored.integrationProfiles, result.context.integrationProfiles);
+  assert.equal(verification.matches, true);
 });
 
 test('shareable context strips unknown company-specific fields', () => {
