@@ -1,0 +1,29 @@
+[
+  {
+    "apiVersion": "backstage.io/v1alpha1",
+    "kind": "System",
+    "metadata": {
+      "name": "finance-erp",
+      "title": "Finance ERP",
+      "annotations": {
+        "eac.io/role-id": "sys.erp",
+        "eac.io/strategy": "keep",
+        "eac.io/instance-id": "app.finance-erp"
+      }
+    },
+    "spec": {"owner": "finance-platform"}
+  },
+  {
+    "apiVersion": "backstage.io/v1alpha1",
+    "kind": "System",
+    "metadata": {
+      "name": "warehouse-platform",
+      "title": "Warehouse Platform",
+      "annotations": {
+        "eac.io/role": "warehouse",
+        "eac.io/strategy": "undecided"
+      }
+    },
+    "spec": {"owner": "supply-chain"}
+  }
+]
