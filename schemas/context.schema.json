@@ -41,6 +41,20 @@
         "enum": ["crm", "erp", "mdm", "wms", "legacy-wms", "mes", "tms", "integration", "integration-platform", "data-platform", "partner-edge"]
       }
     },
+    "currentLandscape": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "systems": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/currentSystem" }
+        },
+        "integrations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/currentIntegration" }
+        }
+      }
+    },
     "nfrProfile": { "$ref": "#/$defs/integrationProfile" },
     "integrationProfiles": {
       "type": "object",
@@ -49,6 +63,39 @@
     }
   },
   "$defs": {
+    "systemRoleId": {
+      "enum": ["sys.crm", "sys.erp", "sys.mdm", "sys.wms", "sys.mes", "sys.tms", "sys.integration", "sys.data-platform", "sys.partner-edge"]
+    },
+    "migrationStrategy": {
+      "enum": ["keep", "replace", "retire", "undecided"]
+    },
+    "currentSystem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "roleId"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "roleId": { "$ref": "#/$defs/systemRoleId" },
+        "strategy": { "$ref": "#/$defs/migrationStrategy" },
+        "replacementRoleId": { "$ref": "#/$defs/systemRoleId" },
+        "notes": { "type": "string" }
+      }
+    },
+    "currentIntegration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "sourceSystemId", "targetSystemId"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "sourceSystemId": { "type": "string", "minLength": 1 },
+        "targetSystemId": { "type": "string", "minLength": 1 },
+        "targetIntegrationId": { "type": "string", "pattern": "^integration\\." },
+        "strategy": { "$ref": "#/$defs/migrationStrategy" },
+        "notes": { "type": "string" }
+      }
+    },
     "integrationProfile": {
       "type": "object",
       "additionalProperties": false,
