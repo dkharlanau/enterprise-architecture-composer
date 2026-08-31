@@ -8,6 +8,11 @@ import { decideIntegrationPattern } from '../src/integration-decision.mjs';
 import { buildDeliveryRoadmap, roadmapToMarkdown } from '../src/roadmap.mjs';
 import { bundleToMarkdown, createPortableBundle, serializeBundle } from '../src/export.mjs';
 import { toVisualWorkbench, visualWorkbenchMarkdown } from '../src/visual-projection.mjs';
+import {
+  adoptInterfaceAsCodeProposal,
+  createInterfaceAsCodeProposal,
+  exportProcessAsCodeStarter
+} from '../src/handoff.mjs';
 
 function usage() {
   console.error(`Usage:
@@ -17,7 +22,10 @@ function usage() {
   node bin/eac.mjs roadmap <context.json> [--markdown] [--output roadmap.json|roadmap.md]
   node bin/eac.mjs bundle <context.json> [--private] [--output architecture.bundle.json]
   node bin/eac.mjs report <context.json> [--output architecture-report.md]
-  node bin/eac.mjs visual <context.json> [--markdown] [--output visual.json|visual.md]`);
+  node bin/eac.mjs visual <context.json> [--markdown] [--output visual.json|visual.md]
+  node bin/eac.mjs process-starter <context.json> <process-key-or-id> [--output process.json]
+  node bin/eac.mjs interface-proposal <context.json> <integration-id> [--output proposal.json]
+  node bin/eac.mjs interface-adopt <proposal.json> <decisions.json> [--output interface.json]`);
 }
 
 function outputPath(rest) {
@@ -145,6 +153,49 @@ async function main(argv) {
     const projection = toVisualWorkbench(composeArchitecture(await readJson(first)));
     if (visualRest.includes('--markdown')) await emitText(visualWorkbenchMarkdown(projection), output.path);
     else await emitJson(projection, output.path);
+    return;
+  }
+
+  if (command === 'process-starter' && first && second) {
+    const output = validateOutput(rest);
+    if (!output.ok) {
+      usage();
+      process.exitCode = 2;
+      return;
+    }
+    const result = composeArchitecture(await readJson(first));
+    await emitJson(exportProcessAsCodeStarter(result, second), output.path);
+    return;
+  }
+
+  if (command === 'interface-proposal' && first && second) {
+    const output = validateOutput(rest);
+    if (!output.ok) {
+      usage();
+      process.exitCode = 2;
+      return;
+    }
+    const result = composeArchitecture(await readJson(first));
+    await emitJson(createInterfaceAsCodeProposal(result, second), output.path);
+    return;
+  }
+
+  if (command === 'interface-adopt' && first && second) {
+    const output = validateOutput(rest);
+    if (!output.ok) {
+      usage();
+      process.exitCode = 2;
+      return;
+    }
+    const proposal = await readJson(first);
+    const decisions = await readJson(second);
+    const adoption = adoptInterfaceAsCodeProposal(proposal, decisions);
+    if (!adoption.ready) {
+      console.error(`eac: interface proposal is not ready for adoption:\n- ${adoption.errors.join('\n- ')}`);
+      process.exitCode = 3;
+      return;
+    }
+    await emitJson(adoption.document, output.path);
     return;
   }
 
