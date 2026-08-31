@@ -43,7 +43,16 @@ export function createPortableBundle(result, options = {}) {
 export function restoreContextFromBundle(bundle) {
   if (bundle?.format !== 'enterprise-architecture-composer/bundle') throw new Error('Not an Enterprise Architecture Composer bundle.');
   if (bundle?.formatVersion !== '0.1') throw new Error(`Unsupported bundle version: ${bundle?.formatVersion ?? 'unknown'}`);
-  return structuredClone(bundle.context);
+
+  const stored = structuredClone(bundle.context);
+  return {
+    industry: stored.industry,
+    operatingModel: stored.operatingModel,
+    processes: stored.processes,
+    scale: stored.scale,
+    constraints: stored.constraints,
+    existingSystems: stored.existingSystemIds ?? []
+  };
 }
 
 export function verifyBundleRecomposition(bundle) {
