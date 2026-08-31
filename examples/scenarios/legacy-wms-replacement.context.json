@@ -1,0 +1,59 @@
+{
+  "industry": "manufacturing",
+  "operatingModel": "b2b",
+  "processes": [
+    "order-to-cash"
+  ],
+  "scale": {
+    "countries": 2,
+    "legalEntities": 2,
+    "plants": 1,
+    "warehouses": 3
+  },
+  "constraints": {
+    "multiCompany": false,
+    "highVolume": false,
+    "retainLegacyWms": false
+  },
+  "currentLandscape": {
+    "systems": [
+      {
+        "id": "app.current-erp",
+        "name": "Current ERP",
+        "roleId": "sys.erp",
+        "strategy": "keep"
+      },
+      {
+        "id": "app.current-crm",
+        "name": "Current CRM",
+        "roleId": "sys.crm",
+        "strategy": "keep"
+      },
+      {
+        "id": "app.legacy-wms",
+        "name": "Legacy WMS",
+        "roleId": "sys.wms",
+        "strategy": "replace",
+        "replacementRoleId": "sys.wms"
+      }
+    ],
+    "integrations": [
+      {
+        "id": "if.current-order",
+        "name": "Current CRM order creation",
+        "sourceSystemId": "app.current-crm",
+        "targetSystemId": "app.current-erp",
+        "targetIntegrationId": "integration.sales-order-request",
+        "strategy": "keep"
+      },
+      {
+        "id": "if.legacy-wms-outbound",
+        "name": "Current delivery release to legacy WMS",
+        "sourceSystemId": "app.current-erp",
+        "targetSystemId": "app.legacy-wms",
+        "targetIntegrationId": "integration.delivery-to-warehouse",
+        "strategy": "replace"
+      }
+    ]
+  }
+}
