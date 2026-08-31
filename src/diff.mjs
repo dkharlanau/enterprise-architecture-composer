@@ -123,6 +123,47 @@ function diffWorkPackages(baseResult, targetResult) {
   return changes;
 }
 
+function diffReplacements(baseResult, targetResult) {
+  const base = indexById(baseResult.transition?.replacements ?? []);
+  const target = indexById(targetResult.transition?.replacements ?? []);
+  const ids = [...new Set([...base.keys(), ...target.keys()])].sort();
+  const changes = [];
+
+  for (const id of ids) {
+    const before = base.get(id);
+    const after = target.get(id);
+    if (!before && after) {
+      changes.push({
+        id,
+        kind: 'replacement',
+        change: 'added',
+        before: null,
+        after,
+        because: after.ruleIds ?? ['MIG-REPLACE-001']
+      });
+    } else if (before && !after) {
+      changes.push({
+        id,
+        kind: 'replacement',
+        change: 'removed',
+        before,
+        after: null,
+        because: before.ruleIds ?? ['MIG-REPLACE-001']
+      });
+    } else if (comparable(before) !== comparable(after)) {
+      changes.push({
+        id,
+        kind: 'replacement',
+        change: 'changed',
+        before,
+        after,
+        because: [...new Set([...(before.ruleIds ?? []), ...(after.ruleIds ?? [])])].sort()
+      });
+    }
+  }
+  return changes;
+}
+
 export function diffCompositions(baseResult, targetResult) {
   if (!baseResult?.blueprint || !targetResult?.blueprint) {
     throw new Error('Both base and target must be composed architecture results.');
@@ -139,6 +180,7 @@ export function diffCompositions(baseResult, targetResult) {
     ));
   }
   changes.push(...diffWorkPackages(baseResult, targetResult));
+  changes.push(...diffReplacements(baseResult, targetResult));
 
   changes.sort((a, b) => a.kind.localeCompare(b.kind) || a.id.localeCompare(b.id));
 
@@ -146,11 +188,12 @@ export function diffCompositions(baseResult, targetResult) {
     added: changes.filter((item) => item.change === 'added').length,
     removed: changes.filter((item) => item.change === 'removed').length,
     changed: changes.filter((item) => item.change === 'changed').length,
+    replacements: changes.filter((item) => item.kind === 'replacement').length,
     total: changes.length
   };
 
   return {
-    schemaVersion: '0.1',
+    schemaVersion: '0.2',
     base: {
       engineVersion: baseResult.engineVersion,
       catalogVersion: baseResult.catalogVersion,
