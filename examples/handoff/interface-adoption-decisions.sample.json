@@ -1,0 +1,21 @@
+{
+  "contractFormat": "REST",
+  "deliveryGuarantee": "at-least-once",
+  "idempotencyRequired": true,
+  "idempotencyKey": "sales_order_id",
+  "ordering": "per-key",
+  "retryStrategy": "automatic",
+  "maxAttempts": 3,
+  "backoff": "PT30S",
+  "monitoringOwner": "Order Integration Operations",
+  "supportRoute": "Order Integration Queue",
+  "monitoringSignals": [
+    "processing_age",
+    "technical_failure"
+  ],
+  "businessKey": "sales_order_id",
+  "reconciliationKey": "sales_order_id",
+  "reconciliationFrequency": "daily",
+  "sourceOfTruth": "sys.erp",
+  "comparison": "Compare accepted CRM orders with ERP sales orders."
+}
