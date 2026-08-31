@@ -243,6 +243,8 @@ Named projections include:
 
 Composer source IDs remain Visual Workbench node IDs, so rendering can evolve without creating a second semantic source of truth.
 
+The end-to-end [rendering workflow](docs/VISUAL-WORKBENCH-INTEGRATION.md) is tested against a pinned Visual Workbench revision. It validates the emitted Markdown with the real downstream parser and renders an executive SVG in CI; this is a versioned compatibility baseline, not an open-ended compatibility claim.
+
 ## Browser workbench
 
 The zero-backend workbench currently exposes five views over one composition:
@@ -327,8 +329,24 @@ The repository publishes the zero-backend workbench from `main` through GitHub A
 
 **v0.2 executable alpha.** Deterministic composition, NFR-aware integration decisions, scenario delta, dependency roadmap, portable review bundles, Process-as-Code starter handoff, Interface-as-Code proposal/adoption handoff, Visual Workbench projection and CI are implemented.
 
-The next product loop is browser-workbench v0.2 parity, richer diagnostics/current→transition→target semantics and actual cross-repository rendering/adoption workflows.
+The next product loop is browser-workbench v0.2 parity, richer diagnostics/current→transition→target semantics and downstream adoption feedback beyond the pinned Visual Workbench rendering baseline.
 
 See [`PRODUCT.md`](PRODUCT.md), [`ARCHITECTURE.md`](ARCHITECTURE.md), [`BACKLOG.md`](BACKLOG.md), [`AGENTS.md`](AGENTS.md), [`schemas/`](schemas/) and [`examples/`](examples/).
 
-MIT License.
+## Related projects
+
+- [Visual Workbench](https://github.com/dkharlanau/visual-workbench) is the tested rendering boundary for Composer's coordinate-free projection. See the pinned [integration workflow](docs/VISUAL-WORKBENCH-INTEGRATION.md) for the exact compatibility evidence.
+- [Process as Code](https://github.com/dkharlanau/process-as-code) and [Interface as Code](https://github.com/dkharlanau/interface-as-code) own downstream process and operational interface semantics after an explicit handoff; Composer remains the proposal and architecture-decision layer.
+- [Agent-Ready Web Profile](https://github.com/dkharlanau/agent-ready-web-profile) can describe the Composer Pages schemas and examples as public data surfaces. It does not validate architecture quality or approve Composer recommendations.
+- [AI CV Builder](https://github.com/dkharlanau/ai-cv-builder) is a separate professional-profile publisher. There is no model exchange between it and Composer.
+
+## License
+
+MIT. See [`LICENSE`](LICENSE).
+
+## About the author
+
+Created and maintained by **Dzmitryi Kharlanau**, an SAP consultant and system analyst working across enterprise architecture, data, integration, operations, and practical AI.
+
+- [Website and knowledge base](https://dkharlanau.github.io/)
+- [LinkedIn](https://www.linkedin.com/in/dkharlanau/)

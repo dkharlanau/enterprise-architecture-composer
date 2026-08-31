@@ -1,0 +1,70 @@
+name: Visual Workbench compatibility
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/visual-projection.mjs"
+      - "src/composer.mjs"
+      - "src/engine.mjs"
+      - "bin/eac.mjs"
+      - "examples/scenarios/**"
+      - "tests/visual-projection.test.mjs"
+      - ".github/workflows/visual-workbench-compatibility.yml"
+  pull_request:
+    paths:
+      - "src/visual-projection.mjs"
+      - "src/composer.mjs"
+      - "src/engine.mjs"
+      - "bin/eac.mjs"
+      - "examples/scenarios/**"
+      - "tests/visual-projection.test.mjs"
+      - ".github/workflows/visual-workbench-compatibility.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Composer
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+
+      - name: Test Composer projection contract
+        run: |
+          npm run check
+          node --test tests/visual-projection.test.mjs tests/cli.test.mjs
+
+      - name: Checkout tested Visual Workbench baseline
+        uses: actions/checkout@v7
+        with:
+          repository: dkharlanau/visual-workbench
+          ref: 5663fac2a92b85917f0911018e3bd61d180be59b
+          path: .integration/visual-workbench
+
+      - name: Build Visual Workbench
+        run: |
+          npm ci --prefix .integration/visual-workbench --ignore-scripts --no-audit --no-fund
+          npm run build --prefix .integration/visual-workbench
+
+      - name: Render a real Composer projection
+        run: |
+          mkdir -p "$RUNNER_TEMP/eac-visual"
+          node bin/eac.mjs visual \
+            examples/scenarios/global-b2b-manufacturer.context.json \
+            --markdown \
+            --output "$RUNNER_TEMP/eac-visual/architecture.visual.md"
+          node .integration/visual-workbench/dist/cli.js validate \
+            "$RUNNER_TEMP/eac-visual/architecture.visual.md"
+          node .integration/visual-workbench/dist/cli.js render \
+            "$RUNNER_TEMP/eac-visual/architecture.visual.md" \
+            --view executive \
+            --output "$RUNNER_TEMP/eac-visual/executive.svg"
+          test -s "$RUNNER_TEMP/eac-visual/executive.svg"
