@@ -9,6 +9,7 @@
   },
   "scripts": {
     "compose:demo": "node bin/eac.mjs compose examples/scenarios/global-b2b-manufacturer.context.json",
+    "transition:demo": "node bin/eac.mjs transition examples/scenarios/legacy-wms-replacement.context.json",
     "compare:demo": "node bin/eac.mjs compare examples/scenarios/o2c-starter.context.json examples/scenarios/global-b2b-manufacturer.context.json",
     "roadmap:demo": "node bin/eac.mjs roadmap examples/scenarios/global-b2b-manufacturer.context.json --markdown",
     "report:demo": "node bin/eac.mjs report examples/scenarios/global-b2b-manufacturer.context.json",
