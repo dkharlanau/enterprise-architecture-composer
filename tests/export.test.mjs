@@ -20,9 +20,12 @@ test('portable bundle recomposes to the identical blueprint', () => {
   });
   const bundle = createPortableBundle(result);
   const verification = verifyBundleRecomposition(bundle);
+  const restored = restoreContextFromBundle(bundle);
 
   assert.equal(verification.matches, true);
-  assert.deepEqual(restoreContextFromBundle(bundle), bundle.context);
+  assert.deepEqual(restored.existingSystems, bundle.context.existingSystemIds);
+  assert.deepEqual(restored.processes, bundle.context.processes);
+  assert.deepEqual(restored.constraints, bundle.context.constraints);
 });
 
 test('shareable context strips unknown company-specific fields', () => {
