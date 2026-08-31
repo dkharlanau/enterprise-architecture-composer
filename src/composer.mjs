@@ -3,6 +3,8 @@ import { decideIntegrationPattern } from './integration-decision.mjs';
 import { analyzeArchitectureQuality } from './quality.mjs';
 import { buildTransitionArchitecture } from './transition.mjs';
 
+const EXPLICIT_NFR_KEYS = ['latency', 'consistency', 'volume', 'replay', 'ordering', 'offlineTolerance'];
+
 function defaultPurpose(integration) {
   const map = {
     'pattern.sync-api': 'business-request',
@@ -39,6 +41,15 @@ function mergeProfile(integration, result, input) {
   return { ...defaultProfile(integration, result), ...global, ...perFlow };
 }
 
+function explicitProfile(integrationId, input) {
+  return { ...(input?.nfrProfile ?? {}), ...(input?.integrationProfiles?.[integrationId] ?? {}) };
+}
+
+function missingExplicitNfrs(integrationId, input) {
+  const explicit = explicitProfile(integrationId, input);
+  return EXPLICIT_NFR_KEYS.filter((key) => explicit[key] === undefined);
+}
+
 function sortedUnique(values = []) {
   return [...new Set(values)].sort((a, b) => a.localeCompare(b));
 }
@@ -55,10 +66,25 @@ export function composeArchitecture(input = {}) {
   const integrations = result.blueprint.integrations.map((integration) => {
     const requestedProfile = mergeProfile(integration, result, input);
     const decision = decideIntegrationPattern(requestedProfile);
-    const explicitProfile = input?.integrationProfiles?.[integration.id] ?? null;
-    if (explicitProfile) profileEntries.push([integration.id, structuredClone(explicitProfile)]);
+    const perFlowProfile = input?.integrationProfiles?.[integration.id] ?? null;
+    if (perFlowProfile) profileEntries.push([integration.id, structuredClone(perFlowProfile)]);
 
-    if (decision.selected && decision.selected.patternId !== integration.patternId && explicitProfile) {
+    if (input.requireExplicitNfrs) {
+      const missing = missingExplicitNfrs(integration.id, input);
+      if (missing.length) {
+        extraFindings.push({
+          id: `finding.nfr-explicit.${integration.id.replace('integration.', '')}`,
+          severity: 'warning',
+          kind: 'nfr-decision',
+          ruleIds: ['NFR-EXPLICIT-001'],
+          objectIds: [integration.id],
+          message: `${integration.name} still relies on catalog defaults for: ${missing.join(', ')}.`,
+          nextDecision: `Confirm explicit ${missing.join(', ')} requirements for ${integration.id} or disable strict NFR confirmation for this scenario.`
+        });
+      }
+    }
+
+    if (decision.selected && decision.selected.patternId !== integration.patternId && perFlowProfile) {
       extraFindings.push({
         id: `finding.integration-profile.${integration.id.replace('integration.', '')}`,
         severity: 'warning',
@@ -86,9 +112,13 @@ export function composeArchitecture(input = {}) {
       ...integration,
       decisionAnalysis: {
         drivers: decision.drivers,
+        explicitDrivers: explicitProfile(integration.id, input),
+        missingExplicitDrivers: input.requireExplicitNfrs ? missingExplicitNfrs(integration.id, input) : [],
         recommendedPatternId: decision.selected?.patternId ?? null,
         recommendedFit: decision.selected?.fit ?? null,
         selectedMatchesBlueprint: decision.selected?.patternId === integration.patternId,
+        decisiveBecause: decision.selected?.because ?? [],
+        decisiveTradeoffs: decision.selected?.tradeoffs ?? [],
         alternatives: decision.alternatives
       }
     };
@@ -101,6 +131,14 @@ export function composeArchitecture(input = {}) {
     if (!integration) return recommendation;
     return {
       ...recommendation,
+      nfrAnalysis: {
+        drivers: integration.decisionAnalysis.drivers,
+        explicitDrivers: integration.decisionAnalysis.explicitDrivers,
+        decisiveBecause: integration.decisionAnalysis.decisiveBecause,
+        decisiveTradeoffs: integration.decisionAnalysis.decisiveTradeoffs,
+        missingExplicitDrivers: integration.decisionAnalysis.missingExplicitDrivers,
+        recommendedPatternId: integration.decisionAnalysis.recommendedPatternId
+      },
       alternativeAnalysis: integration.decisionAnalysis.alternatives
     };
   });
@@ -109,6 +147,7 @@ export function composeArchitecture(input = {}) {
   const context = {
     ...result.context,
     ...(input.nfrProfile ? { nfrProfile: structuredClone(input.nfrProfile) } : {}),
+    ...(input.requireExplicitNfrs ? { requireExplicitNfrs: true } : {}),
     ...(Object.keys(integrationProfiles).length ? { integrationProfiles } : {}),
     ...(input.currentLandscape ? { currentLandscape: structuredClone(input.currentLandscape) } : {})
   };
@@ -147,6 +186,7 @@ export function composeArchitecture(input = {}) {
       ...result.metrics,
       findingCount: findings.length,
       workPackageCount: workPackages.length,
+      explicitNfrGapCount: findings.filter((item) => item.kind === 'nfr-decision').length,
       ...quality.metrics,
       ...(transition ? {
         transitionSystemCount: transition.systems.length,
