@@ -40,6 +40,32 @@
       "items": {
         "enum": ["crm", "erp", "mdm", "wms", "legacy-wms", "mes", "tms", "integration", "integration-platform", "data-platform", "partner-edge"]
       }
+    },
+    "nfrProfile": { "$ref": "#/$defs/integrationProfile" },
+    "integrationProfiles": {
+      "type": "object",
+      "propertyNames": { "pattern": "^integration\\.[a-z0-9.-]+$" },
+      "additionalProperties": { "$ref": "#/$defs/integrationProfile" }
+    }
+  },
+  "$defs": {
+    "integrationProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "purpose": { "enum": ["business-request", "state-transfer", "business-event", "partner-document", "analytics", "replication", "command"] },
+        "latency": { "enum": ["immediate", "seconds", "minutes", "hours"] },
+        "consistency": { "enum": ["strong", "eventual", "snapshot"] },
+        "volume": { "enum": ["low", "medium", "high", "very-high"] },
+        "fanOut": { "type": "integer", "minimum": 1 },
+        "ordering": { "enum": ["none", "per-key", "global"] },
+        "replay": { "enum": ["not-required", "desirable", "required"] },
+        "offlineTolerance": { "enum": ["none", "short", "extended"] },
+        "partnerBoundary": { "type": "boolean" },
+        "payloadSize": { "enum": ["small", "medium", "large", "very-large"] },
+        "changeFrequency": { "enum": ["low", "medium", "high"] },
+        "immediateResponse": { "type": "boolean" }
+      }
     }
   },
   "required": ["processes"]
