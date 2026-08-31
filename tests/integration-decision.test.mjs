@@ -71,6 +71,21 @@ test('analytics path prefers ETL/ELT', () => {
   assert.equal(result.selected.patternId, 'pattern.etl-elt');
 });
 
+test('high-volume analytics still selects ETL/ELT when asynchronous messaging is also viable', () => {
+  const result = decideIntegrationPattern({
+    purpose: 'analytics',
+    latency: 'minutes',
+    payloadSize: 'large',
+    volume: 'high',
+    replay: 'desirable',
+    fanOut: 1
+  });
+
+  assert.equal(result.selected.patternId, 'pattern.etl-elt');
+  const async = result.alternatives.find((item) => item.patternId === 'pattern.async-message');
+  assert.equal(async.fit, 'preferred');
+});
+
 test('conflicting architecture drivers surface questions instead of being hidden', () => {
   const result = decideIntegrationPattern({
     immediateResponse: true,
