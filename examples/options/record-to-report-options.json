@@ -1,0 +1,35 @@
+{
+  "options": [
+    {
+      "id": "catalog-defaults",
+      "label": "Use reviewed catalog defaults",
+      "context": {
+        "processes": ["record-to-report"]
+      }
+    },
+    {
+      "id": "strict-unconfirmed",
+      "label": "Require explicit NFR confirmation before design sign-off",
+      "context": {
+        "processes": ["record-to-report"],
+        "requireExplicitNfrs": true
+      }
+    },
+    {
+      "id": "strict-confirmed",
+      "label": "Strict NFR confirmation with explicit analytical profile",
+      "context": {
+        "processes": ["record-to-report"],
+        "requireExplicitNfrs": true,
+        "nfrProfile": {
+          "latency": "minutes",
+          "consistency": "snapshot",
+          "volume": "medium",
+          "replay": "desirable",
+          "ordering": "none",
+          "offlineTolerance": "short"
+        }
+      }
+    }
+  ]
+}
