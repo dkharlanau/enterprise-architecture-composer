@@ -9,6 +9,7 @@ import { dirname, join, resolve } from 'node:path';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const cli = resolve(root, 'bin/eac.mjs');
 const scenario = resolve(root, 'examples/scenarios/o2c-starter.context.json');
+const transitionScenario = resolve(root, 'examples/scenarios/legacy-wms-replacement.context.json');
 const adoptionDecisions = resolve(root, 'examples/handoff/interface-adoption-decisions.sample.json');
 
 function run(args) {
@@ -21,10 +22,30 @@ test('compose CLI emits v0.2 enriched blueprint', () => {
   assert.ok(output.blueprint.integrations.every((item) => item.decisionAnalysis));
 });
 
+test('transition CLI emits current transition target replacement plan', () => {
+  const output = JSON.parse(run(['transition', transitionScenario]));
+  assert.ok(output.replacements.some((item) => item.currentId === 'app.legacy-wms' && item.targetId === 'target.wms'));
+  assert.ok(output.coexistenceWindows.some((item) => item.currentId === 'app.legacy-wms'));
+  assert.ok(output.workPackages.some((item) => item.id === 'wp.transition.retire.app.legacy-wms'));
+});
+
 test('roadmap CLI emits deterministic delivery waves', () => {
   const output = JSON.parse(run(['roadmap', scenario]));
   assert.ok(output.summary.waveCount >= 1);
   assert.ok(output.packages.every((item) => item.wave >= 1));
+});
+
+test('migration roadmap preserves introduce before coexist before retire waves', () => {
+  const output = JSON.parse(run(['roadmap', transitionScenario]));
+  const introduce = output.packages.find((item) => item.id === 'wp.transition.introduce.target.wms');
+  const coexist = output.packages.find((item) => item.id === 'wp.transition.coexist.app.legacy-wms.target.wms');
+  const retire = output.packages.find((item) => item.id === 'wp.transition.retire.app.legacy-wms');
+
+  assert.equal(output.summary.migrationPackageCount, 3);
+  assert.ok(introduce.wave < coexist.wave);
+  assert.ok(coexist.wave < retire.wave);
+  assert.match(introduce.rationale, /Target WMS|target\.wms/);
+  assert.ok(introduce.labels.includes('work:migration'));
 });
 
 test('report CLI emits reviewable Markdown', () => {
