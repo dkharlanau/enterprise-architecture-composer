@@ -2,11 +2,12 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-import { composeArchitecture, serializeComposition } from '../src/engine.mjs';
+import { composeArchitecture, serializeComposition } from '../src/composer.mjs';
 import { diffCompositions } from '../src/diff.mjs';
 import { decideIntegrationPattern } from '../src/integration-decision.mjs';
 import { buildDeliveryRoadmap, roadmapToMarkdown } from '../src/roadmap.mjs';
 import { bundleToMarkdown, createPortableBundle, serializeBundle } from '../src/export.mjs';
+import { toVisualWorkbench, visualWorkbenchMarkdown } from '../src/visual-projection.mjs';
 
 function usage() {
   console.error(`Usage:
@@ -15,7 +16,8 @@ function usage() {
   node bin/eac.mjs integration <drivers.json> [--output decision.json]
   node bin/eac.mjs roadmap <context.json> [--markdown] [--output roadmap.json|roadmap.md]
   node bin/eac.mjs bundle <context.json> [--private] [--output architecture.bundle.json]
-  node bin/eac.mjs report <context.json> [--output architecture-report.md]`);
+  node bin/eac.mjs report <context.json> [--output architecture-report.md]
+  node bin/eac.mjs visual <context.json> [--markdown] [--output visual.json|visual.md]`);
 }
 
 function outputPath(rest) {
@@ -129,6 +131,20 @@ async function main(argv) {
     }
     const bundle = createPortableBundle(composeArchitecture(await readJson(first)));
     await emitText(bundleToMarkdown(bundle), output.path);
+    return;
+  }
+
+  if (command === 'visual' && first) {
+    const visualRest = [second, ...rest].filter(Boolean);
+    const output = validateOutput(visualRest);
+    if (!output.ok) {
+      usage();
+      process.exitCode = 2;
+      return;
+    }
+    const projection = toVisualWorkbench(composeArchitecture(await readJson(first)));
+    if (visualRest.includes('--markdown')) await emitText(visualWorkbenchMarkdown(projection), output.path);
+    else await emitJson(projection, output.path);
     return;
   }
 
