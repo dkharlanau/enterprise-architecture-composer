@@ -3,7 +3,7 @@
   "product": "enterprise-architecture-composer",
   "description": "Deterministic enterprise architecture synthesis from explicit business context and constraints.",
   "repository": "https://github.com/dkharlanau/enterprise-architecture-composer",
-  "planned_page": "https://dkharlanau.github.io/enterprise-architecture-composer/",
+  "page": "https://dkharlanau.github.io/enterprise-architecture-composer/",
   "core_principles": [
     "deterministic-first",
     "explain-every-recommendation",
@@ -13,11 +13,11 @@
     "one-semantic-owner"
   ],
   "interfaces": {
-    "context_schema": "schemas/context.schema.json",
-    "result_schema": "schemas/blueprint.schema.json",
-    "rulebook": "src/rulebook.mjs",
+    "context_schema": "https://dkharlanau.github.io/enterprise-architecture-composer/schemas/context.schema.json",
+    "result_schema": "https://dkharlanau.github.io/enterprise-architecture-composer/schemas/blueprint.schema.json",
+    "rulebook": "https://dkharlanau.github.io/enterprise-architecture-composer/src/rulebook.mjs",
     "cli": "node bin/eac.mjs compose <context.json> [--output blueprint.json]",
-    "reference_scenario": "examples/scenarios/global-b2b-manufacturer.context.json"
+    "reference_scenario": "https://dkharlanau.github.io/enterprise-architecture-composer/examples/scenarios/global-b2b-manufacturer.context.json"
   },
   "semantic_ownership": {
     "owns": [

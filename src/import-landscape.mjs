@@ -59,7 +59,17 @@ export function parseCsvRecords(text) {
 
 function resolveSystemRole(value) {
   if (!value) return { status: 'unknown', alias: '', candidates: [] };
-  return resolveGlossaryAlias(value, { kind: 'system-role' });
+  const resolution = resolveGlossaryAlias(value);
+  if (resolution.status === 'resolved' && resolution.entry?.kind !== 'system-role') {
+    return { ...resolution, status: 'unknown', candidates: [] };
+  }
+  if (resolution.status === 'ambiguous') {
+    return {
+      ...resolution,
+      candidates: (resolution.candidates ?? []).filter((item) => item.kind === 'system-role')
+    };
+  }
+  return resolution;
 }
 
 function roleConflict(sourceId, row, value, resolution) {
@@ -353,8 +363,8 @@ function mergeById(baseItems, incomingItems, kind, conflicts, sourceId) {
 }
 
 export function mergeImportedConstraints(baseContext = {}, imports = []) {
-  const conflicts = imports.flatMap((item) => item.conflicts ?? []).map(structuredClone);
-  const evidence = imports.flatMap((item) => item.facts ?? []).map(structuredClone).sort((a, b) => a.id.localeCompare(b.id));
+  const conflicts = imports.flatMap((item) => item.conflicts ?? []).map((item) => structuredClone(item));
+  const evidence = imports.flatMap((item) => item.facts ?? []).map((item) => structuredClone(item)).sort((a, b) => a.id.localeCompare(b.id));
   const processesOut = sortedUnique([...(baseContext.processes ?? []), ...imports.flatMap((item) => item.processes ?? [])]);
   let systemsOut = structuredClone(baseContext.currentLandscape?.systems ?? []);
   let integrationsOut = structuredClone(baseContext.currentLandscape?.integrations ?? []);

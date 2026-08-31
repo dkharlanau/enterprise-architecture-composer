@@ -117,6 +117,32 @@ Global and per-flow NFR profiles are part of the public context contract:
 
 An explicit NFR profile may challenge the catalog-default pattern. Composer then creates a finding for human confirmation; it does **not** silently rewrite the architecture.
 
+## Human decisions remain separate from proposals
+
+Accepted, rejected and overridden recommendations can be recorded in the input context without changing the original Composer proposal:
+
+```json
+{
+  "processes": ["order-to-cash"],
+  "architectureDecisions": [
+    {
+      "recommendationId": "rec.integration.sales-order-request",
+      "status": "overridden",
+      "selectedDecision": "pattern.async-message",
+      "rationale": "The approved channel accepts asynchronous confirmation and prioritizes outage isolation."
+    }
+  ]
+}
+```
+
+The result retains the proposed decision, the effective human decision and a snapshot of the source recommendation. If later context no longer produces that recommendation, Composer emits explicit decision drift instead of discarding the prior record. Portable bundles preserve the same decision history.
+
+## Current landscape imports
+
+The import module accepts application/interface CSV inventories, annotated Backstage entities and existing Process-as-Code or Interface-as-Code artifacts. Imported data becomes current-state evidence and constraints; it never becomes a target recommendation automatically.
+
+Examples are available under [`examples/import/`](examples/import/). Ambiguous role aliases, missing endpoints and conflicting instance facts remain explicit import conflicts. The merge step preserves existing context rather than overwriting it silently.
+
 ## Delivery roadmap
 
 A composed architecture can be projected into an implementation roadmap with deterministic dependency waves.
@@ -272,7 +298,7 @@ index.html + styles.css        public browser product
 ## Contract and rule discipline
 
 - Context and result formats are published under `schemas/`.
-- The rulebook currently contains **31 stable rule IDs**; implemented and experimental guidance are distinguished explicitly.
+- The public rulebook inventories every stable rule ID and distinguishes implemented guidance from experimental contracts.
 - Three reference scenarios are protected by golden architecture summaries.
 - High-volume analytics, NFR bundle round-trip and downstream handoff have explicit regression tests.
 - The public CLI is tested end to end.
@@ -291,17 +317,11 @@ The Composer does not become a universal writable enterprise graph.
 
 This repository remains the synthesis and architecture-decision layer above those specialized artifacts.
 
-## GitHub Pages bootstrap
+## GitHub Pages
 
-The Pages deployment workflow is present, but GitHub requires Pages to be enabled once for a brand-new repository. In **Settings → Pages**, choose **GitHub Actions** as the source, then run **Deploy GitHub Pages** from Actions.
-
-The first enablement cannot be performed with the workflow's default `GITHUB_TOKEN`.
-
-Intended public URL after verification:
+The repository publishes the zero-backend workbench from `main` through GitHub Actions:
 
 `https://dkharlanau.github.io/enterprise-architecture-composer/`
-
-The portfolio must not mark that URL `live` until the deployment has actually been verified.
 
 ## Status
 

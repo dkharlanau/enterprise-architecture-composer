@@ -1,9 +1,8 @@
 name: Deploy GitHub Pages
 
-# Bootstrap note: a brand-new repository must have Pages enabled once in
-# Settings -> Pages -> Source: GitHub Actions. GitHub's configure-pages action
-# cannot perform that first enablement with the default GITHUB_TOKEN.
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -20,10 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 24
 
@@ -38,8 +37,9 @@ jobs:
       - name: Assemble static site
         run: |
           mkdir -p _site
-          cp index.html styles.css _site/
-          cp -R src _site/src
+          cp index.html styles.css styles-v2.css _site/
+          cp docs/agent-manifest.json _site/agent-manifest.json
+          cp -R src schemas examples _site/
           touch _site/.nojekyll
 
       - name: Upload Pages artifact

@@ -37,6 +37,20 @@ test('public workbench remains zero-backend and avoids remote runtime dependenci
   assert.doesNotMatch(composer, /Math\.random|Date\.now|new Date\s*\(/);
 });
 
+test('Pages artifact includes every public contract advertised by the workbench', async () => {
+  const index = await text('index.html');
+  const workflow = await text('.github/workflows/pages.yml');
+  const manifest = JSON.parse(await text('docs/agent-manifest.json'));
+
+  assert.match(index, /rel="canonical" href="https:\/\/dkharlanau\.github\.io\/enterprise-architecture-composer\/"/);
+  assert.match(index, /href="\.\/agent-manifest\.json"/);
+  assert.match(workflow, /cp index\.html styles\.css styles-v2\.css _site\//);
+  assert.match(workflow, /cp docs\/agent-manifest\.json _site\/agent-manifest\.json/);
+  assert.match(workflow, /cp -R src schemas examples _site\//);
+  assert.equal(manifest.page, 'https://dkharlanau.github.io/enterprise-architecture-composer/');
+  assert.match(manifest.interfaces.context_schema, /\/schemas\/context\.schema\.json$/);
+});
+
 test('v0.2 product views are present in the first static document', async () => {
   const index = await text('index.html');
   for (const view of ['Blueprint', 'Integrations', 'Data', 'Transition', 'Roadmap', 'Delta']) {

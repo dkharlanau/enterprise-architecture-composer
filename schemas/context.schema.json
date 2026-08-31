@@ -59,6 +59,10 @@
       "type": "object",
       "propertyNames": { "pattern": "^integration\\.[a-z0-9.-]+$" },
       "additionalProperties": { "$ref": "#/$defs/integrationProfile" }
+    },
+    "architectureDecisions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/architectureDecision" }
     }
   },
   "$defs": {
@@ -110,6 +114,29 @@
         "changeFrequency": { "enum": ["low", "medium", "high"] },
         "immediateResponse": { "type": "boolean" }
       }
+    },
+    "architectureDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["recommendationId", "status"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^decision\\." },
+        "recommendationId": { "type": "string", "pattern": "^rec\\." },
+        "status": { "enum": ["accepted", "rejected", "overridden"] },
+        "selectedDecision": { "type": "string", "minLength": 1 },
+        "rationale": { "type": "string", "minLength": 1 },
+        "sourceRecommendation": { "type": "object" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "enum": ["rejected", "overridden"] } }, "required": ["status"] },
+          "then": { "required": ["rationale"] }
+        },
+        {
+          "if": { "properties": { "status": { "const": "overridden" } }, "required": ["status"] },
+          "then": { "required": ["selectedDecision"] }
+        }
+      ]
     }
   },
   "required": ["processes"]

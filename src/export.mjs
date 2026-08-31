@@ -1,7 +1,7 @@
 import { composeArchitecture } from './composer.mjs';
 import { buildDeliveryRoadmap, roadmapToMarkdown } from './roadmap.mjs';
 
-const SAFE_CONTEXT_KEYS = ['industry', 'operatingModel', 'processes', 'scale', 'constraints', 'existingSystemIds', 'currentLandscape', 'requireExplicitNfrs', 'nfrProfile', 'integrationProfiles'];
+const SAFE_CONTEXT_KEYS = ['industry', 'operatingModel', 'processes', 'scale', 'constraints', 'existingSystemIds', 'currentLandscape', 'requireExplicitNfrs', 'nfrProfile', 'integrationProfiles', 'architectureDecisions'];
 
 function stableObject(value) {
   if (Array.isArray(value)) return value.map(stableObject);
@@ -59,7 +59,8 @@ export function restoreContextFromBundle(bundle) {
     ...(stored.currentLandscape ? { currentLandscape: stored.currentLandscape } : {}),
     ...(stored.requireExplicitNfrs ? { requireExplicitNfrs: true } : {}),
     ...(stored.nfrProfile ? { nfrProfile: stored.nfrProfile } : {}),
-    ...(stored.integrationProfiles ? { integrationProfiles: stored.integrationProfiles } : {})
+    ...(stored.integrationProfiles ? { integrationProfiles: stored.integrationProfiles } : {}),
+    ...(stored.architectureDecisions ? { architectureDecisions: stored.architectureDecisions } : {})
   };
 }
 

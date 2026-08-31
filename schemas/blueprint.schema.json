@@ -4,7 +4,7 @@
   "title": "Enterprise Architecture Composer Result",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "engineVersion", "catalogVersion", "context", "blueprint", "recommendations", "findings", "workPackages", "metrics"],
+  "required": ["schemaVersion", "engineVersion", "catalogVersion", "context", "blueprint", "recommendations", "decisionRecords", "findings", "workPackages", "metrics"],
   "properties": {
     "schemaVersion": { "const": "0.1" },
     "engineVersion": { "type": "string" },
@@ -49,6 +49,24 @@
           "ruleIds": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
           "alternatives": { "type": "array", "items": { "type": "string" } },
           "objectIds": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "decisionRecords": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "recommendationId", "status", "applies", "effectiveDecision", "sourceRecommendation", "currentRecommendation"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^decision\\." },
+          "recommendationId": { "type": "string", "pattern": "^rec\\." },
+          "status": { "enum": ["accepted", "rejected", "overridden"] },
+          "applies": { "type": "boolean" },
+          "effectiveDecision": { "type": ["string", "null"] },
+          "selectedDecision": { "type": "string" },
+          "rationale": { "type": "string" },
+          "sourceRecommendation": { "type": ["object", "null"] },
+          "currentRecommendation": { "type": ["object", "null"] }
         }
       }
     },

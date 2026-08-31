@@ -2,6 +2,7 @@ import { composeArchitecture as composeBase } from './engine.mjs';
 import { decideIntegrationPattern } from './integration-decision.mjs';
 import { analyzeArchitectureQuality } from './quality.mjs';
 import { buildTransitionArchitecture } from './transition.mjs';
+import { applyArchitectureDecisions, architectureDecisionInput } from './decisions.mjs';
 
 const EXPLICIT_NFR_KEYS = ['latency', 'consistency', 'volume', 'replay', 'ordering', 'offlineTolerance'];
 
@@ -161,10 +162,36 @@ export function composeArchitecture(input = {}) {
     findings: [...result.findings, ...extraFindings].sort((a, b) => a.id.localeCompare(b.id))
   };
 
-  const quality = analyzeArchitectureQuality(draft);
-  const transition = buildTransitionArchitecture(draft, input.currentLandscape ?? null);
+  const appliedDecisions = applyArchitectureDecisions(draft, input.architectureDecisions ?? []);
+  const decisionRecords = appliedDecisions.records;
+  const decidedIntegrations = draft.blueprint.integrations.map((integration) => {
+    const record = appliedDecisions.integrationDecisionMap.get(integration.id);
+    return {
+      ...integration,
+      decisionAnalysis: {
+        ...integration.decisionAnalysis,
+        effectivePatternId: record ? record.effectiveDecision : integration.patternId,
+        effectiveDecisionSource: record ? 'human' : 'composer',
+        humanDecisionStatus: record?.status ?? null
+      }
+    };
+  });
+  const decidedDraft = {
+    ...draft,
+    context: {
+      ...draft.context,
+      ...(decisionRecords.length ? { architectureDecisions: architectureDecisionInput(decisionRecords) } : {})
+    },
+    blueprint: { ...draft.blueprint, integrations: decidedIntegrations },
+    recommendations: appliedDecisions.recommendations,
+    decisionRecords,
+    findings: [...draft.findings, ...appliedDecisions.findings].sort((a, b) => a.id.localeCompare(b.id))
+  };
+
+  const quality = analyzeArchitectureQuality(decidedDraft);
+  const transition = buildTransitionArchitecture(decidedDraft, input.currentLandscape ?? null);
   const findings = uniqueById([
-    ...draft.findings,
+    ...decidedDraft.findings,
     ...quality.findings,
     ...(transition?.findings ?? [])
   ]);
@@ -178,7 +205,7 @@ export function composeArchitecture(input = {}) {
   const workPackages = uniqueById([...baseWorkPackages, ...(transition?.workPackages ?? [])]);
 
   return {
-    ...draft,
+    ...decidedDraft,
     findings,
     workPackages,
     ...(transition ? { transition: { ...transition, findings: undefined, workPackages: undefined } } : {}),
@@ -193,7 +220,10 @@ export function composeArchitecture(input = {}) {
         transitionIntegrationCount: transition.integrations.length,
         replacementCount: transition.replacements.length,
         coexistenceWindowCount: transition.coexistenceWindows.length
-      } : {})
+      } : {}),
+      humanDecisionCount: decisionRecords.length,
+      humanOverrideCount: decisionRecords.filter((item) => item.applies && item.status === 'overridden').length,
+      orphanedDecisionCount: decisionRecords.filter((item) => !item.applies).length
     }
   };
 }
