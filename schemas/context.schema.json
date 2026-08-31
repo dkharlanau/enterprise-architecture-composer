@@ -45,15 +45,14 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "systems": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/currentSystem" }
-        },
-        "integrations": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/currentIntegration" }
-        }
+        "systems": { "type": "array", "items": { "$ref": "#/$defs/currentSystem" } },
+        "integrations": { "type": "array", "items": { "$ref": "#/$defs/currentIntegration" } }
       }
+    },
+    "requireExplicitNfrs": {
+      "type": "boolean",
+      "default": false,
+      "description": "When true, latency, consistency, volume, replay, ordering and offline tolerance must be explicitly confirmed globally or per integration instead of relying silently on reference defaults."
     },
     "nfrProfile": { "$ref": "#/$defs/integrationProfile" },
     "integrationProfiles": {
@@ -66,9 +65,7 @@
     "systemRoleId": {
       "enum": ["sys.crm", "sys.erp", "sys.mdm", "sys.wms", "sys.mes", "sys.tms", "sys.integration", "sys.data-platform", "sys.partner-edge"]
     },
-    "migrationStrategy": {
-      "enum": ["keep", "replace", "retire", "undecided"]
-    },
+    "migrationStrategy": { "enum": ["keep", "replace", "retire", "undecided"] },
     "currentSystem": {
       "type": "object",
       "additionalProperties": false,
