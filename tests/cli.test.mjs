@@ -29,6 +29,15 @@ test('transition CLI emits current transition target replacement plan', () => {
   assert.ok(output.workPackages.some((item) => item.id === 'wp.transition.retire.app.legacy-wms'));
 });
 
+test('metrics CLI emits transparent structural metrics without aggregate score', () => {
+  const output = JSON.parse(run(['metrics', scenario]));
+  assert.equal(output.schemaVersion, '0.1');
+  assert.equal(output.structure.processCount, 1);
+  assert.ok(output.processSystemSpan.some((item) => item.processId === 'process.order-to-cash'));
+  assert.equal(Object.hasOwn(output, 'score'), false);
+  assert.equal(Object.hasOwn(output, 'healthScore'), false);
+});
+
 test('roadmap CLI emits deterministic delivery waves', () => {
   const output = JSON.parse(run(['roadmap', scenario]));
   assert.ok(output.summary.waveCount >= 1);
