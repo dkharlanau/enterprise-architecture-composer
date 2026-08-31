@@ -1,7 +1,7 @@
 import { composeArchitecture } from './composer.mjs';
 import { buildDeliveryRoadmap, roadmapToMarkdown } from './roadmap.mjs';
 
-const SAFE_CONTEXT_KEYS = ['industry', 'operatingModel', 'processes', 'scale', 'constraints', 'existingSystemIds', 'currentLandscape', 'nfrProfile', 'integrationProfiles'];
+const SAFE_CONTEXT_KEYS = ['industry', 'operatingModel', 'processes', 'scale', 'constraints', 'existingSystemIds', 'currentLandscape', 'requireExplicitNfrs', 'nfrProfile', 'integrationProfiles'];
 
 function stableObject(value) {
   if (Array.isArray(value)) return value.map(stableObject);
@@ -57,6 +57,7 @@ export function restoreContextFromBundle(bundle) {
     constraints: stored.constraints,
     existingSystems: stored.existingSystemIds ?? [],
     ...(stored.currentLandscape ? { currentLandscape: stored.currentLandscape } : {}),
+    ...(stored.requireExplicitNfrs ? { requireExplicitNfrs: true } : {}),
     ...(stored.nfrProfile ? { nfrProfile: stored.nfrProfile } : {}),
     ...(stored.integrationProfiles ? { integrationProfiles: stored.integrationProfiles } : {})
   };
@@ -89,6 +90,7 @@ export function bundleToMarkdown(bundle) {
     `- Plants: ${result.context.scale.plants}`,
     `- Warehouses: ${result.context.scale.warehouses}`,
     `- Existing systems: ${result.context.existingSystemIds.length ? result.context.existingSystemIds.join(', ') : 'none declared'}`,
+    `- Explicit NFR confirmation: ${result.context.requireExplicitNfrs ? 'required' : 'catalog defaults allowed'}`,
     '',
     '## Target architecture',
     '',
@@ -97,6 +99,7 @@ export function bundleToMarkdown(bundle) {
     `- ${result.metrics.systemCount} system responsibilities`,
     `- ${result.metrics.integrationCount} integration flows`,
     `- ${result.metrics.asyncIntegrationCount} asynchronous flows`,
+    `- ${result.metrics.explicitNfrGapCount ?? 0} explicit NFR gaps`,
     '',
     '### System responsibilities',
     ''
@@ -110,6 +113,8 @@ export function bundleToMarkdown(bundle) {
   for (const integration of result.blueprint.integrations) {
     const nfrDecision = integration.decisionAnalysis;
     lines.push(`- **${integration.name}** — ${integration.patternName}; \`${integration.source}\` → \`${integration.target}\`; rules: ${integration.ruleIds.join(', ')}`);
+    if (nfrDecision?.decisiveBecause?.length) lines.push(`  - NFR rationale: ${nfrDecision.decisiveBecause.join('; ')}`);
+    if (nfrDecision?.missingExplicitDrivers?.length) lines.push(`  - NFR confirmation missing: ${nfrDecision.missingExplicitDrivers.join(', ')}`);
     if (nfrDecision && !nfrDecision.selectedMatchesBlueprint) {
       lines.push(`  - NFR review: ${nfrDecision.recommendedPatternId} is currently preferred by the explicit driver profile.`);
     }
@@ -147,6 +152,8 @@ export function bundleToMarkdown(bundle) {
     lines.push(`- Confidence: ${recommendation.confidence}`);
     lines.push(`- Because: ${recommendation.because.join('; ')}`);
     lines.push(`- Rule(s): ${recommendation.ruleIds.join(', ')}`);
+    if (recommendation.nfrAnalysis?.decisiveBecause?.length) lines.push(`- NFR rationale: ${recommendation.nfrAnalysis.decisiveBecause.join('; ')}`);
+    if (recommendation.nfrAnalysis?.missingExplicitDrivers?.length) lines.push(`- Missing explicit NFRs: ${recommendation.nfrAnalysis.missingExplicitDrivers.join(', ')}`);
     if (recommendation.alternatives?.length) lines.push(`- Alternatives: ${recommendation.alternatives.join(', ')}`);
     if (recommendation.alternativeAnalysis?.length) {
       lines.push('- Alternative analysis:');
