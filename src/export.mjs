@@ -1,7 +1,7 @@
 import { composeArchitecture } from './composer.mjs';
 import { buildDeliveryRoadmap, roadmapToMarkdown } from './roadmap.mjs';
 
-const SAFE_CONTEXT_KEYS = ['industry', 'operatingModel', 'processes', 'scale', 'constraints', 'existingSystemIds', 'nfrProfile', 'integrationProfiles'];
+const SAFE_CONTEXT_KEYS = ['industry', 'operatingModel', 'processes', 'scale', 'constraints', 'existingSystemIds', 'currentLandscape', 'nfrProfile', 'integrationProfiles'];
 
 function stableObject(value) {
   if (Array.isArray(value)) return value.map(stableObject);
@@ -56,6 +56,7 @@ export function restoreContextFromBundle(bundle) {
     scale: stored.scale,
     constraints: stored.constraints,
     existingSystems: stored.existingSystemIds ?? [],
+    ...(stored.currentLandscape ? { currentLandscape: stored.currentLandscape } : {}),
     ...(stored.nfrProfile ? { nfrProfile: stored.nfrProfile } : {}),
     ...(stored.integrationProfiles ? { integrationProfiles: stored.integrationProfiles } : {})
   };
@@ -111,6 +112,18 @@ export function bundleToMarkdown(bundle) {
     lines.push(`- **${integration.name}** — ${integration.patternName}; \`${integration.source}\` → \`${integration.target}\`; rules: ${integration.ruleIds.join(', ')}`);
     if (nfrDecision && !nfrDecision.selectedMatchesBlueprint) {
       lines.push(`  - NFR review: ${nfrDecision.recommendedPatternId} is currently preferred by the explicit driver profile.`);
+    }
+  }
+
+  if (result.transition) {
+    lines.push('', '## Current → transition → target', '');
+    lines.push(`- Transition systems: ${result.transition.systems.length}`);
+    lines.push(`- Transition integrations: ${result.transition.integrations.length}`);
+    lines.push(`- Replacements: ${result.transition.replacements.length}`);
+    lines.push(`- Coexistence windows: ${result.transition.coexistenceWindows.length}`);
+    lines.push('');
+    for (const replacement of result.transition.replacements) {
+      lines.push(`- **${replacement.kind}**: \`${replacement.currentId}\` → \`${replacement.targetId}\``);
     }
   }
 
