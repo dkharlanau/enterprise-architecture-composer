@@ -1,0 +1,4 @@
+id,name,role,strategy,replacement_role,notes
+app.erp,Current ERP,ERP,keep,,Transactional backbone remains
+app.crm,CRM,CRM,keep,,Customer interaction remains
+app.legacy-wms,Legacy WMS,WMS,replace,WMS,Replace warehouse execution instance
