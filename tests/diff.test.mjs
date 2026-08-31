@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { composeArchitecture, serializeComposition } from '../src/engine.mjs';
+import { composeArchitecture, serializeComposition } from '../src/composer.mjs';
 import { diffCompositions } from '../src/diff.mjs';
 
 const BASE = {
@@ -63,4 +63,32 @@ test('delta emits compact impact seeds for downstream change analysis', () => {
   const delta = diffCompositions(composeArchitecture(BASE), composeArchitecture(TARGET));
   assert.equal(delta.impactSeeds.length, delta.summary.total);
   assert.ok(delta.impactSeeds.every((seed) => seed.id && seed.kind && seed.change));
+});
+
+test('migration strategy change is represented as a replacement, not only add/remove noise', () => {
+  const currentSystems = [
+    { id: 'app.erp', name: 'ERP', roleId: 'sys.erp', strategy: 'keep' },
+    { id: 'app.crm', name: 'CRM', roleId: 'sys.crm', strategy: 'keep' },
+    { id: 'app.wms', name: 'Legacy WMS', roleId: 'sys.wms', strategy: 'keep' }
+  ];
+  const base = composeArchitecture({
+    processes: ['order-to-cash'],
+    currentLandscape: { systems: currentSystems }
+  });
+  const target = composeArchitecture({
+    processes: ['order-to-cash'],
+    currentLandscape: {
+      systems: currentSystems.map((item) => item.id === 'app.wms'
+        ? { ...item, strategy: 'replace', replacementRoleId: 'sys.wms' }
+        : item)
+    }
+  });
+
+  const delta = diffCompositions(base, target);
+  const replacement = delta.changes.find((item) => item.kind === 'replacement' && item.after?.currentId === 'app.wms');
+  assert.equal(delta.schemaVersion, '0.2');
+  assert.ok(delta.summary.replacements >= 1);
+  assert.ok(replacement);
+  assert.equal(replacement.change, 'added');
+  assert.ok(replacement.because.includes('MIG-REPLACE-001'));
 });
