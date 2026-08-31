@@ -38,6 +38,21 @@ test('metrics CLI emits transparent structural metrics without aggregate score',
   assert.equal(Object.hasOwn(output, 'healthScore'), false);
 });
 
+test('glossary CLI emits stable entries with aliases and provenance', () => {
+  const output = JSON.parse(run(['glossary']));
+  const erp = output.entries.find((item) => item.id === 'sys.erp');
+  assert.equal(output.schemaVersion, '0.1');
+  assert.ok(output.entries.length > 30);
+  assert.ok(erp.aliases.includes('erp'));
+  assert.ok(erp.provenance.catalogVersion);
+});
+
+test('resolve CLI can disambiguate aliases using an explicit kind', () => {
+  const output = JSON.parse(run(['resolve', 'warehouse', '--kind', 'system-role']));
+  assert.equal(output.status, 'resolved');
+  assert.equal(output.id, 'sys.wms');
+});
+
 test('roadmap CLI emits deterministic delivery waves', () => {
   const output = JSON.parse(run(['roadmap', scenario]));
   assert.ok(output.summary.waveCount >= 1);
