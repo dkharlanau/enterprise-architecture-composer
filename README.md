@@ -38,6 +38,21 @@ changed input ─┘
 
 The public Composer surface is currently **v0.2.0**.
 
+## 30-second proof
+
+From the repository root, generate a review document from the committed synthetic manufacturing fixture:
+
+```bash
+node bin/eac.mjs report \
+  examples/scenarios/global-b2b-manufacturer.context.json \
+  --output /tmp/eac-manufacturing-review.md \
+  && sed -n '1,28p' /tmp/eac-manufacturing-review.md
+```
+
+Expected artifact: `/tmp/eac-manufacturing-review.md`, beginning with `# Enterprise Architecture Decision Report` and followed by the scenario scope, explicit findings and architecture decisions. Open the [browser demo](https://dkharlanau.github.io/enterprise-architecture-composer/) for an interactive view, or follow the [release-pinned walkthrough](https://github.com/dkharlanau/enterprise-architecture-composer/blob/main/docs/GOLDEN_QUICKSTART.md) to verify the deterministic digest.
+
+This proof uses public reference data. It demonstrates reproducible proposal generation; it does not validate a production landscape, approve an architecture, or replace professional and organizational review.
+
 ## Quick start
 
 No runtime package installation is required for the current alpha.
