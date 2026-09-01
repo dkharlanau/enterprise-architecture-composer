@@ -19,4 +19,4 @@ GitHub Releases include a byte-reproducible `npm pack` tarball, a deterministic 
 - Stable IDs are compatibility contracts; presentation order and human-readable wording are not semantic APIs unless documented otherwise.
 - No claim is made that a composed proposal is complete, optimal, standards-certified, or approved for production.
 
-See the [golden quickstart](GOLDEN_QUICKSTART.md) and [v0.2.0 release notes](../release/v0.2.0.md).
+See the [golden quickstart](GOLDEN_QUICKSTART.md) and [v0.2.1 release notes](../release/v0.2.1.md).

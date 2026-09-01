@@ -2,6 +2,17 @@
 
 All notable public release changes are recorded here. Versions follow Semantic Versioning.
 
+## [0.2.1] - 2026-09-01
+
+### Documentation
+
+- Added a copy-paste 30-second proof that generates a review artifact from the committed synthetic manufacturing fixture.
+- Linked the live workbench and release-pinned verification walkthrough while keeping the proposal and production-review boundary explicit.
+
+### Compatibility
+
+- No schema, stable ID, engine, CLI, or handoff contract changed from v0.2.0.
+
 ## [0.2.0] - 2026-09-01
 
 ### Added
@@ -18,4 +29,5 @@ All notable public release changes are recorded here. Versions follow Semantic V
 - Recommendations are proposals. Human adoption decisions remain separate and downstream tools retain their own semantics.
 - GitHub Releases provide an installable package tarball and source archive; no npm-registry package is published.
 
+[0.2.1]: https://github.com/dkharlanau/enterprise-architecture-composer/releases/tag/v0.2.1
 [0.2.0]: https://github.com/dkharlanau/enterprise-architecture-composer/releases/tag/v0.2.0

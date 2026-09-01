@@ -36,7 +36,7 @@ baseline ──────┐
 changed input ─┘
 ```
 
-The public Composer surface is currently **v0.2.0**.
+The public Composer surface is currently **v0.2.1**.
 
 ## 30-second proof
 
@@ -352,7 +352,7 @@ See [`PRODUCT.md`](PRODUCT.md), [`ARCHITECTURE.md`](ARCHITECTURE.md), [`BACKLOG.
 
 Release and adoption resources:
 
-- [v0.2.0 release notes](release/v0.2.0.md)
+- [v0.2.1 release notes](release/v0.2.1.md)
 - [release policy and compatibility boundary](docs/RELEASES.md)
 - [15-minute external usability test](docs/USABILITY_TEST_15_MIN.md)
 - [contribution and feedback guide](CONTRIBUTING.md)
