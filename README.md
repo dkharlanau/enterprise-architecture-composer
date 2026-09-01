@@ -42,6 +42,8 @@ The public Composer surface is currently **v0.2.0**.
 
 No runtime package installation is required for the current alpha.
 
+For the pinned release path and expected output digest, use the [golden quickstart](docs/GOLDEN_QUICKSTART.md).
+
 ```bash
 npm test
 
@@ -332,6 +334,14 @@ The repository publishes the zero-backend workbench from `main` through GitHub A
 The next product loop is browser-workbench v0.2 parity, richer diagnostics/current→transition→target semantics and downstream adoption feedback beyond the pinned Visual Workbench rendering baseline.
 
 See [`PRODUCT.md`](PRODUCT.md), [`ARCHITECTURE.md`](ARCHITECTURE.md), [`BACKLOG.md`](BACKLOG.md), [`AGENTS.md`](AGENTS.md), [`schemas/`](schemas/) and [`examples/`](examples/).
+
+Release and adoption resources:
+
+- [v0.2.0 release notes](release/v0.2.0.md)
+- [release policy and compatibility boundary](docs/RELEASES.md)
+- [15-minute external usability test](docs/USABILITY_TEST_15_MIN.md)
+- [contribution and feedback guide](CONTRIBUTING.md)
+- [changelog](CHANGELOG.md)
 
 ## Related projects
 

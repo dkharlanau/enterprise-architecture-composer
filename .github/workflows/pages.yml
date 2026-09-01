@@ -39,6 +39,8 @@ jobs:
           mkdir -p _site
           cp index.html styles.css styles-v2.css _site/
           cp docs/agent-manifest.json _site/agent-manifest.json
+          mkdir -p _site/assets
+          cp assets/social-preview.png _site/assets/social-preview.png
           cp -R src schemas examples _site/
           touch _site/.nojekyll
 

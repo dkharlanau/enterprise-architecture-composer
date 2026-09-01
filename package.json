@@ -4,6 +4,31 @@
   "private": true,
   "type": "module",
   "description": "Explainable enterprise architecture synthesis from business context and constraints.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dkharlanau/enterprise-architecture-composer.git"
+  },
+  "homepage": "https://dkharlanau.github.io/enterprise-architecture-composer/",
+  "bugs": {
+    "url": "https://github.com/dkharlanau/enterprise-architecture-composer/issues"
+  },
+  "files": [
+    "bin",
+    "src",
+    "schemas",
+    "examples",
+    "docs",
+    "release",
+    "README.md",
+    "ARCHITECTURE.md",
+    "PRODUCT.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "index.html",
+    "styles.css",
+    "styles-v2.css"
+  ],
   "bin": {
     "eac": "./bin/eac.mjs"
   },
