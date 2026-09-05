@@ -33,13 +33,13 @@ test('projection preserves Composer stable IDs as Visual Workbench node IDs', ()
   for (const capability of result.blueprint.capabilities) assert.ok(ids.has(capability.id));
 });
 
-test('projection creates named executive, integration, data and exception views', () => {
+test('projection creates named executive, integration, data, security and exception views', () => {
   const result = composeArchitecture({
     processes: ['order-to-cash', 'procure-to-pay'],
     constraints: { multiCompany: true }
   });
   const views = toVisualWorkbench(result).visual.views.map((view) => view.id);
-  assert.deepEqual(views, ['executive', 'integration', 'data', 'exceptions']);
+  assert.deepEqual(views, ['executive', 'integration', 'data', 'security', 'exceptions']);
 });
 
 test('Markdown projection remains deterministic and coordinate-free', () => {
