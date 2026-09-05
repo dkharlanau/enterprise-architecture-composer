@@ -6,6 +6,7 @@
   "additionalProperties": false,
   "required": ["format", "formatVersion", "pack", "evidence", "aliases", "guidance", "options"],
   "properties": {
+    "$schema": { "type": "string", "minLength": 1 },
     "format": { "const": "enterprise-architecture-composer/architecture-pack" },
     "formatVersion": { "const": "0.1" },
     "pack": {
