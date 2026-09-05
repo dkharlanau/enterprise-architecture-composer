@@ -18,6 +18,41 @@ function clone(value) {
   return structuredClone(value);
 }
 
+function alternateErpVendorPack() {
+  return {
+    format: 'enterprise-architecture-composer/architecture-pack',
+    formatVersion: '0.1',
+    pack: {
+      id: 'pack.vendor.example-erp',
+      version: '0.1.0',
+      kind: 'vendor',
+      name: 'Example ERP option',
+      description: 'A second vendor option used to prove that architecture packs coexist instead of replacing one another.'
+    },
+    evidence: [{
+      id: 'pack.vendor.example-erp.evidence.mapping',
+      evidenceType: 'internal-methodology',
+      title: 'Example ERP mapping evidence',
+      note: 'Fixture-only mapping evidence used to test deterministic multi-vendor coexistence.'
+    }],
+    aliases: [],
+    guidance: [],
+    options: [{
+      id: 'pack.vendor.example-erp.option.erp',
+      optionType: 'system-role',
+      targetId: 'sys.erp',
+      name: 'Example ERP',
+      vendor: 'Example Vendor',
+      description: 'A second candidate implementation for the stable ERP responsibility.',
+      fitEvidence: [{
+        statement: 'Mapped to the ERP responsibility for coexistence testing; project fit remains explicitly unassessed.',
+        sourceIds: ['pack.vendor.example-erp.evidence.mapping']
+      }],
+      commercialPreference: { status: 'none' }
+    }]
+  };
+}
+
 test('published automotive and SAP packs validate cleanly', async () => {
   const automotive = await loadPack('industry-automotive.pack.json');
   const sap = await loadPack('vendor-sap.pack.json');
@@ -25,6 +60,17 @@ test('published automotive and SAP packs validate cleanly', async () => {
   assert.equal(validateArchitecturePack(automotive).valid, true);
   assert.equal(validateArchitecturePack(sap).valid, true);
   assert.equal(validateArchitecturePackSet([automotive, sap]).valid, true);
+});
+
+test('runtime validation rejects fields not allowed by the published pack schema', async () => {
+  const pack = await loadPack('industry-automotive.pack.json');
+  pack.pack.unreviewedMagic = true;
+  pack.guidance[0].weight = 0.9;
+  const validation = validateArchitecturePack(pack);
+
+  assert.equal(validation.valid, false);
+  assert.ok(validation.errors.some((item) => item.includes("pack contains unsupported field 'unreviewedMagic'")));
+  assert.ok(validation.errors.some((item) => item.includes("contains unsupported field 'weight'")));
 });
 
 test('pack cannot define or replace core rules', async () => {
@@ -113,6 +159,21 @@ test('industry and vendor packs coexist without mutating core blueprint or rule 
   assert.ok(overlay.guidance.some((item) => item.packId === 'pack.industry.automotive'));
   assert.ok(overlay.options.some((item) => item.id === 'pack.vendor.sap.option.s4hana'));
   assert.ok(overlay.options.some((item) => item.id === 'pack.vendor.sap.option.integration-suite'));
+});
+
+test('multiple vendor packs targeting the same core role coexist as alternatives', async () => {
+  const sap = await loadPack('vendor-sap.pack.json');
+  const otherVendor = alternateErpVendorPack();
+  const result = composeArchitecture({ processes: ['order-to-cash'] });
+  const overlay = architecturePackOverlay(result, [sap, otherVendor]);
+  const erpOptions = overlay.options.filter((item) => item.targetId === 'sys.erp');
+
+  assert.equal(validateArchitecturePackSet([sap, otherVendor]).valid, true);
+  assert.deepEqual(erpOptions.map((item) => item.id), [
+    'pack.vendor.example-erp.option.erp',
+    'pack.vendor.sap.option.s4hana'
+  ]);
+  assert.ok(erpOptions.every((item) => item.commercialPreference.status === 'none'));
 });
 
 test('vendor options expose technical fit evidence and commercial preference as separate review fields', async () => {
