@@ -1,5 +1,4 @@
 {
-  "$schema": "https://dkharlanau.github.io/decision-tables-as-code/schema/decision-table.schema.json",
   "version": 1,
   "id": "eac-integration-pattern-selection",
   "name": "Enterprise Architecture Composer integration pattern selection prototype",
@@ -10,6 +9,7 @@
     "consumer": "enterprise-architecture-composer",
     "compatibility": "prototype",
     "native_reference": "src/integration-decision.mjs",
+    "schema_target": "https://dkharlanau.github.io/decision-tables-as-code/schema/decision-table.schema.json",
     "boundary": "This table represents decisive semantic cases only; detailed fit/tradeoff evaluation remains native Composer logic until ownership is intentionally migrated."
   },
   "inputs": [
