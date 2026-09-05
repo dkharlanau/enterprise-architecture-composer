@@ -3,61 +3,62 @@
   "formatVersion": "0.1",
   "tableId": "eac-integration-pattern-selection",
   "tableArtifact": "./integration-pattern-v1.json",
+  "schemaTarget": "https://dkharlanau.github.io/decision-tables-as-code/schema/decision-table.schema.json",
   "runtimeOwner": "https://github.com/dkharlanau/decision-tables-as-code",
   "vectors": [
     {
       "id": "analytics",
+      "ruleId": "analytics",
       "input": { "purpose": "analytics", "latency": "minutes", "fanOut": 1, "partnerBoundary": false, "payloadSize": "large", "replay": "desirable" },
-      "tableInput": { "purpose": "analytics", "latency": "minutes", "fan_out": 1, "partner_boundary": false, "payload_size": "large", "replay": "desirable" },
-      "expectedPatternId": "pattern.etl-elt"
+      "tableInput": { "purpose": "analytics", "latency": "minutes", "fan_out": 1, "partner_boundary": false, "payload_size": "large", "replay": "desirable" }
     },
     {
       "id": "partner-document",
+      "ruleId": "partner-document",
       "input": { "purpose": "partner-document", "latency": "minutes", "fanOut": 1, "partnerBoundary": true, "payloadSize": "medium", "replay": "required" },
-      "tableInput": { "purpose": "partner-document", "latency": "minutes", "fan_out": 1, "partner_boundary": true, "payload_size": "medium", "replay": "required" },
-      "expectedPatternId": "pattern.edi-b2b"
+      "tableInput": { "purpose": "partner-document", "latency": "minutes", "fan_out": 1, "partner_boundary": true, "payload_size": "medium", "replay": "required" }
     },
     {
       "id": "replication",
+      "ruleId": "replication",
       "input": { "purpose": "replication", "latency": "seconds", "fanOut": 1, "partnerBoundary": false, "payloadSize": "medium", "replay": "desirable" },
-      "tableInput": { "purpose": "replication", "latency": "seconds", "fan_out": 1, "partner_boundary": false, "payload_size": "medium", "replay": "desirable" },
-      "expectedPatternId": "pattern.cdc"
+      "tableInput": { "purpose": "replication", "latency": "seconds", "fan_out": 1, "partner_boundary": false, "payload_size": "medium", "replay": "desirable" }
     },
     {
       "id": "business-event",
+      "ruleId": "business-event",
       "input": { "purpose": "business-event", "latency": "seconds", "fanOut": 3, "partnerBoundary": false, "payloadSize": "medium", "replay": "required" },
-      "tableInput": { "purpose": "business-event", "latency": "seconds", "fan_out": 3, "partner_boundary": false, "payload_size": "medium", "replay": "required" },
-      "expectedPatternId": "pattern.domain-event"
+      "tableInput": { "purpose": "business-event", "latency": "seconds", "fan_out": 3, "partner_boundary": false, "payload_size": "medium", "replay": "required" }
     },
     {
       "id": "immediate-business-request",
+      "ruleId": "immediate-business-request",
       "input": { "purpose": "business-request", "latency": "immediate", "consistency": "strong", "fanOut": 1, "partnerBoundary": false, "payloadSize": "small", "replay": "not-required", "immediateResponse": true },
-      "tableInput": { "purpose": "business-request", "latency": "immediate", "fan_out": 1, "partner_boundary": false, "payload_size": "small", "replay": "not-required" },
-      "expectedPatternId": "pattern.sync-api"
+      "tableInput": { "purpose": "business-request", "latency": "immediate", "fan_out": 1, "partner_boundary": false, "payload_size": "small", "replay": "not-required" }
     },
     {
       "id": "delayed-state-transfer",
+      "ruleId": "delayed-state-transfer",
       "input": { "purpose": "state-transfer", "latency": "hours", "fanOut": 1, "partnerBoundary": false, "payloadSize": "medium", "replay": "desirable" },
-      "tableInput": { "purpose": "state-transfer", "latency": "hours", "fan_out": 1, "partner_boundary": false, "payload_size": "medium", "replay": "desirable" },
-      "expectedPatternId": "pattern.batch-file"
+      "tableInput": { "purpose": "state-transfer", "latency": "hours", "fan_out": 1, "partner_boundary": false, "payload_size": "medium", "replay": "desirable" }
     },
     {
       "id": "very-large-state-transfer",
+      "ruleId": "very-large-state-transfer",
       "input": { "purpose": "state-transfer", "latency": "seconds", "fanOut": 1, "partnerBoundary": false, "payloadSize": "very-large", "replay": "desirable" },
-      "tableInput": { "purpose": "state-transfer", "latency": "seconds", "fan_out": 1, "partner_boundary": false, "payload_size": "very-large", "replay": "desirable" },
-      "expectedPatternId": "pattern.batch-file"
+      "tableInput": { "purpose": "state-transfer", "latency": "seconds", "fan_out": 1, "partner_boundary": false, "payload_size": "very-large", "replay": "desirable" }
     },
     {
       "id": "state-transfer",
+      "ruleId": "state-transfer",
       "input": { "purpose": "state-transfer", "latency": "seconds", "fanOut": 1, "partnerBoundary": false, "payloadSize": "medium", "replay": "desirable" },
-      "tableInput": { "purpose": "state-transfer", "latency": "seconds", "fan_out": 1, "partner_boundary": false, "payload_size": "medium", "replay": "desirable" },
-      "expectedPatternId": "pattern.async-message"
+      "tableInput": { "purpose": "state-transfer", "latency": "seconds", "fan_out": 1, "partner_boundary": false, "payload_size": "medium", "replay": "desirable" }
     },
     {
       "id": "command",
+      "ruleId": "command",
       "input": { "purpose": "command", "latency": "seconds", "fanOut": 1, "partnerBoundary": false, "payloadSize": "medium", "replay": "desirable" },
-      "tableInput": { "purpose": "command", "latency": "seconds", "fan_out": 1, "partner_boundary": false, "payload_size": "medium", "replay": "desirable" },
-      "expectedPatternId": "pattern.async-message"
+      "tableInput": { "purpose": "command", "latency": "seconds", "fan_out": 1, "partner_boundary": false, "payload_size": "medium", "replay": "desirable" }
     }
   ]
 }
