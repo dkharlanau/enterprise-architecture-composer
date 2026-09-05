@@ -1,0 +1,106 @@
+{
+  "$schema": "../schemas/architecture-pack.schema.json",
+  "format": "enterprise-architecture-composer/architecture-pack",
+  "formatVersion": "0.1",
+  "pack": {
+    "id": "pack.vendor.sap",
+    "version": "0.1.0",
+    "kind": "vendor",
+    "name": "SAP implementation options",
+    "description": "Illustrative SAP product mappings to stable Composer responsibilities; technical fit evidence is kept separate from commercial preference."
+  },
+  "evidence": [
+    {
+      "id": "pack.vendor.sap.evidence.mapping-method",
+      "evidenceType": "internal-methodology",
+      "title": "SAP-to-Composer role mapping method",
+      "note": "Illustrative product-to-role mapping for architecture exploration; it is not vendor documentation, procurement advice or a claim of universal product fit."
+    }
+  ],
+  "aliases": [
+    {
+      "id": "pack.vendor.sap.alias.s4",
+      "alias": "sap s4",
+      "targetId": "sys.erp"
+    },
+    {
+      "id": "pack.vendor.sap.alias.mdg",
+      "alias": "sap mdg",
+      "targetId": "sys.mdm"
+    },
+    {
+      "id": "pack.vendor.sap.alias.integration-suite",
+      "alias": "sap integration suite",
+      "targetId": "sys.integration"
+    }
+  ],
+  "guidance": [
+    {
+      "id": "pack.vendor.sap.guidance.s4-erp-mapping",
+      "classification": "vendor-mapping",
+      "statement": "SAP S/4HANA is represented only as a candidate implementation option for the Composer ERP responsibility, not as an automatic architecture decision.",
+      "targetIds": ["sys.erp"],
+      "sourceIds": ["pack.vendor.sap.evidence.mapping-method"]
+    },
+    {
+      "id": "pack.vendor.sap.guidance.integration-suite-mapping",
+      "classification": "vendor-mapping",
+      "statement": "SAP Integration Suite is represented only as a candidate implementation option for the Composer integration-platform responsibility.",
+      "targetIds": ["sys.integration"],
+      "sourceIds": ["pack.vendor.sap.evidence.mapping-method"]
+    }
+  ],
+  "options": [
+    {
+      "id": "pack.vendor.sap.option.s4hana",
+      "optionType": "system-role",
+      "targetId": "sys.erp",
+      "name": "SAP S/4HANA",
+      "vendor": "SAP",
+      "description": "Candidate implementation for the transactional ERP responsibility in the Composer reference model.",
+      "fitEvidence": [
+        {
+          "statement": "The option is mapped to the transactional ERP responsibility; actual scope and product fit still require project-specific validation.",
+          "sourceIds": ["pack.vendor.sap.evidence.mapping-method"]
+        }
+      ],
+      "commercialPreference": {
+        "status": "none"
+      }
+    },
+    {
+      "id": "pack.vendor.sap.option.mdg",
+      "optionType": "system-role",
+      "targetId": "sys.mdm",
+      "name": "SAP Master Data Governance",
+      "vendor": "SAP",
+      "description": "Candidate implementation for the master-data governance responsibility in the Composer reference model.",
+      "fitEvidence": [
+        {
+          "statement": "The option is mapped to the MDM responsibility when governed shared master data is part of the composed target architecture.",
+          "sourceIds": ["pack.vendor.sap.evidence.mapping-method"]
+        }
+      ],
+      "commercialPreference": {
+        "status": "none"
+      }
+    },
+    {
+      "id": "pack.vendor.sap.option.integration-suite",
+      "optionType": "system-role",
+      "targetId": "sys.integration",
+      "name": "SAP Integration Suite",
+      "vendor": "SAP",
+      "description": "Candidate implementation for the integration-platform responsibility in the Composer reference model.",
+      "fitEvidence": [
+        {
+          "statement": "The option is mapped to the integration-platform responsibility; protocol, runtime, governance and operating-model fit remain separate decisions.",
+          "sourceIds": ["pack.vendor.sap.evidence.mapping-method"]
+        }
+      ],
+      "commercialPreference": {
+        "status": "none"
+      }
+    }
+  ]
+}
