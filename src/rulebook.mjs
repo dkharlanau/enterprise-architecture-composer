@@ -1,4 +1,4 @@
-export const RULEBOOK_VERSION = '0.2.1';
+export const RULEBOOK_VERSION = '0.2.2';
 
 // The rulebook is the public inventory of deterministic architecture guidance.
 // `implemented: true` means the current public Composer surface executes or emits the rule.
@@ -32,7 +32,13 @@ export const RULEBOOK = [
   { id: 'OPS-IDEMPOTENCY-001', family: 'operations', implemented: false, maturity: 'experimental', description: 'Replayable at-least-once processing requires an idempotency or duplicate-handling decision.' },
   { id: 'OPS-ORDERING-001', family: 'operations', implemented: false, maturity: 'experimental', description: 'Business objects with sequence-sensitive updates require an explicit ordering strategy.' },
   { id: 'SEC-PARTNER-001', family: 'security', implemented: true, maturity: 'fixture-backed', description: 'A partner boundary requires explicit trust, identity and transport-security decisions.' },
-  { id: 'SEC-SENSITIVE-001', family: 'security', implemented: false, maturity: 'experimental', description: 'Sensitive or regulated data movement requires explicit access, residency and audit decisions.' },
+  { id: 'SEC-PUBLIC-001', family: 'security', implemented: true, maturity: 'fixture-backed', description: 'Public-facing integration exposure requires explicit authentication, authorization, abuse controls, transport security and audit decisions.' },
+  { id: 'SEC-PRIVATE-001', family: 'security', implemented: true, maturity: 'fixture-backed', description: 'A private network boundary still requires explicit segmentation, caller identity, authorization and ownership instead of implicit trust.' },
+  { id: 'SEC-IDENTITY-001', family: 'security', implemented: true, maturity: 'fixture-backed', description: 'An identity or authentication boundary requires explicit issuer, credential propagation, authorization context and failure semantics.' },
+  { id: 'SEC-PRIVILEGED-001', family: 'security', implemented: true, maturity: 'fixture-backed', description: 'Privileged integration requires explicit least-privilege, credential lifecycle, break-glass ownership and audit decisions.' },
+  { id: 'SEC-SENSITIVE-001', family: 'security', implemented: true, maturity: 'fixture-backed', description: 'Sensitive or regulated data movement requires explicit access, encryption, masking/redaction and logging decisions.' },
+  { id: 'SEC-RESIDENCY-001', family: 'security', implemented: true, maturity: 'fixture-backed', description: 'Explicit data residency constraints require validation of processing, storage, backup, support and observability locations.' },
+  { id: 'SEC-AUDIT-001', family: 'security', implemented: true, maturity: 'fixture-backed', description: 'Security-relevant flows or data with audit requirements need explicit evidence production, retention, access and completeness decisions.' },
   { id: 'MIG-WMS-001', family: 'migration', implemented: true, maturity: 'fixture-backed', description: 'Retained legacy WMS requires an explicit coexistence and retirement boundary.' },
   { id: 'MIG-REPLACE-001', family: 'migration', implemented: true, maturity: 'fixture-backed', description: 'A replacement requires introduce-before-retire dependencies and an explicit coexistence window.' },
   { id: 'DECISION-ORPHAN-001', family: 'decision-governance', implemented: true, maturity: 'fixture-backed', description: 'A retained human decision whose source recommendation no longer exists must remain visible as reviewable decision drift.' },
