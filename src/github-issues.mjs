@@ -182,7 +182,7 @@ export function reconcileGitHubIssuePlan(plan, existingIssues = []) {
   };
 }
 
-export async function applyGitHubIssuePlan(plan, adapter, options = {}) {
+export async function applyGitHubIssuePlan(plan, adapter) {
   if (!plan?.readyForApply || !plan?.approvalRef) {
     throw new Error('GitHub issue plan is not approved. Regenerate it with a non-empty approvalRef before apply.');
   }
@@ -226,8 +226,7 @@ export async function applyGitHubIssuePlan(plan, adapter, options = {}) {
       created: created.length,
       skippedExisting: skipped.length,
       total: reconciliation.operations.length
-    },
-    dryRun: Boolean(options.dryRun)
+    }
   };
 }
 
