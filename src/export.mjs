@@ -1,7 +1,7 @@
 import { composeArchitecture } from './composer.mjs';
 import { buildDeliveryRoadmap, roadmapToMarkdown } from './roadmap.mjs';
 
-const SAFE_CONTEXT_KEYS = ['industry', 'operatingModel', 'processes', 'scale', 'constraints', 'existingSystemIds', 'currentLandscape', 'requireExplicitNfrs', 'nfrProfile', 'integrationProfiles', 'architectureDecisions'];
+const SAFE_CONTEXT_KEYS = ['industry', 'operatingModel', 'processes', 'scale', 'constraints', 'existingSystemIds', 'currentLandscape', 'requireExplicitNfrs', 'nfrProfile', 'integrationProfiles', 'securityProfile', 'architectureDecisions'];
 
 function stableObject(value) {
   if (Array.isArray(value)) return value.map(stableObject);
@@ -60,6 +60,7 @@ export function restoreContextFromBundle(bundle) {
     ...(stored.requireExplicitNfrs ? { requireExplicitNfrs: true } : {}),
     ...(stored.nfrProfile ? { nfrProfile: stored.nfrProfile } : {}),
     ...(stored.integrationProfiles ? { integrationProfiles: stored.integrationProfiles } : {}),
+    ...(stored.securityProfile ? { securityProfile: stored.securityProfile } : {}),
     ...(stored.architectureDecisions ? { architectureDecisions: stored.architectureDecisions } : {})
   };
 }
@@ -92,6 +93,7 @@ export function bundleToMarkdown(bundle) {
     `- Warehouses: ${result.context.scale.warehouses}`,
     `- Existing systems: ${result.context.existingSystemIds.length ? result.context.existingSystemIds.join(', ') : 'none declared'}`,
     `- Explicit NFR confirmation: ${result.context.requireExplicitNfrs ? 'required' : 'catalog defaults allowed'}`,
+    `- Security compliance status: ${result.security?.review?.complianceStatus ?? 'not-assessed'}`,
     '',
     '## Target architecture',
     '',
@@ -101,6 +103,7 @@ export function bundleToMarkdown(bundle) {
     `- ${result.metrics.integrationCount} integration flows`,
     `- ${result.metrics.asyncIntegrationCount} asynchronous flows`,
     `- ${result.metrics.explicitNfrGapCount ?? 0} explicit NFR gaps`,
+    `- ${result.metrics.trustBoundaryCount ?? 0} trust boundaries`,
     '',
     '### System responsibilities',
     ''
@@ -119,6 +122,15 @@ export function bundleToMarkdown(bundle) {
     if (nfrDecision && !nfrDecision.selectedMatchesBlueprint) {
       lines.push(`  - NFR review: ${nfrDecision.recommendedPatternId} is currently preferred by the explicit driver profile.`);
     }
+  }
+
+  const trustBoundaries = result.blueprint.trustBoundaries ?? [];
+  if (trustBoundaries.length) {
+    lines.push('', '### Trust boundaries', '');
+    for (const boundary of trustBoundaries) {
+      lines.push(`- **${boundary.name}** (\`${boundary.id}\`) — ${boundary.boundaryType}; flows: ${boundary.integrationIds.length ? boundary.integrationIds.join(', ') : 'none'}; rules: ${boundary.ruleIds.join(', ')}`);
+    }
+    lines.push('', `Security note: ${result.security?.review?.statement ?? 'Security composition is an architecture review aid and does not establish compliance.'}`);
   }
 
   if (result.transition) {
