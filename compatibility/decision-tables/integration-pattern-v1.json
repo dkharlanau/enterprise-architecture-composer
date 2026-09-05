@@ -1,0 +1,100 @@
+{
+  "$schema": "https://dkharlanau.github.io/decision-tables-as-code/schema/decision-table.schema.json",
+  "version": 1,
+  "id": "eac-integration-pattern-selection",
+  "name": "Enterprise Architecture Composer integration pattern selection prototype",
+  "description": "Prototype of the mature semantic integration-pattern selection family expressed as a Decision Tables as Code v1 artifact. Composer remains the orchestrator and does not execute this table internally.",
+  "hit_policy": "first",
+  "metadata": {
+    "owner": "decision-tables-as-code",
+    "consumer": "enterprise-architecture-composer",
+    "compatibility": "prototype",
+    "native_reference": "src/integration-decision.mjs",
+    "boundary": "This table represents decisive semantic cases only; detailed fit/tradeoff evaluation remains native Composer logic until ownership is intentionally migrated."
+  },
+  "inputs": [
+    { "name": "purpose", "type": "string", "domain": ["business-request", "state-transfer", "business-event", "partner-document", "analytics", "replication", "command"] },
+    { "name": "latency", "type": "string", "domain": ["immediate", "seconds", "minutes", "hours"] },
+    { "name": "fan_out", "type": "integer" },
+    { "name": "partner_boundary", "type": "boolean" },
+    { "name": "payload_size", "type": "string", "domain": ["small", "medium", "large", "very-large"] },
+    { "name": "replay", "type": "string", "domain": ["not-required", "desirable", "required"] }
+  ],
+  "outputs": [
+    { "name": "pattern_id", "type": "string", "description": "Preferred Composer integration-pattern stable ID for the decisive semantic case." }
+  ],
+  "rules": [
+    {
+      "id": "analytics",
+      "description": "Analytical consumption uses ETL/ELT as the decisive semantic pattern.",
+      "priority": 10,
+      "source": "INT-ANALYTICS-001",
+      "when": { "purpose": "analytics", "latency": "*", "fan_out": "*", "partner_boundary": "*", "payload_size": "*", "replay": "*" },
+      "then": { "pattern_id": "pattern.etl-elt" }
+    },
+    {
+      "id": "partner-document",
+      "description": "Structured trading-partner documents use the B2B/EDI boundary.",
+      "priority": 20,
+      "source": "INT-B2B-001",
+      "when": { "purpose": "partner-document", "latency": "*", "fan_out": "*", "partner_boundary": true, "payload_size": "*", "replay": "*" },
+      "then": { "pattern_id": "pattern.edi-b2b" }
+    },
+    {
+      "id": "replication",
+      "description": "Internal state replication uses CDC/replication semantics.",
+      "priority": 30,
+      "source": "INT-CDC-001",
+      "when": { "purpose": "replication", "latency": "*", "fan_out": "*", "partner_boundary": false, "payload_size": "*", "replay": "*" },
+      "then": { "pattern_id": "pattern.cdc" }
+    },
+    {
+      "id": "business-event",
+      "description": "A business fact with multiple independent consumers uses a domain event.",
+      "priority": 40,
+      "source": "INT-EVENT-001",
+      "when": { "purpose": "business-event", "latency": "*", "fan_out": { "gte": 2 }, "partner_boundary": false, "payload_size": "*", "replay": "*" },
+      "then": { "pattern_id": "pattern.domain-event" }
+    },
+    {
+      "id": "immediate-business-request",
+      "description": "An immediate one-consumer business request uses synchronous request/response.",
+      "priority": 50,
+      "source": "INT-SYNC-001",
+      "when": { "purpose": "business-request", "latency": "immediate", "fan_out": 1, "partner_boundary": false, "payload_size": "*", "replay": "*" },
+      "then": { "pattern_id": "pattern.sync-api" }
+    },
+    {
+      "id": "delayed-state-transfer",
+      "description": "A state transfer with hour-level latency can use a scheduled batch/file pattern.",
+      "priority": 60,
+      "source": "INT-BATCH-001",
+      "when": { "purpose": "state-transfer", "latency": "hours", "fan_out": 1, "partner_boundary": false, "payload_size": "*", "replay": "*" },
+      "then": { "pattern_id": "pattern.batch-file" }
+    },
+    {
+      "id": "very-large-state-transfer",
+      "description": "A very-large state-transfer payload can use a batch/file pattern when it is not immediate.",
+      "priority": 70,
+      "source": "INT-BATCH-001",
+      "when": { "purpose": "state-transfer", "latency": "seconds", "fan_out": 1, "partner_boundary": false, "payload_size": "very-large", "replay": "*" },
+      "then": { "pattern_id": "pattern.batch-file" }
+    },
+    {
+      "id": "state-transfer",
+      "description": "A normal point-to-point state transfer uses asynchronous messaging.",
+      "priority": 80,
+      "source": "INT-ASYNC-001",
+      "when": { "purpose": "state-transfer", "latency": "seconds", "fan_out": 1, "partner_boundary": false, "payload_size": "*", "replay": "*" },
+      "then": { "pattern_id": "pattern.async-message" }
+    },
+    {
+      "id": "command",
+      "description": "A non-immediate point-to-point command uses asynchronous messaging in the reference integration family.",
+      "priority": 90,
+      "source": "INT-ASYNC-001",
+      "when": { "purpose": "command", "latency": "seconds", "fan_out": 1, "partner_boundary": false, "payload_size": "*", "replay": "*" },
+      "then": { "pattern_id": "pattern.async-message" }
+    }
+  ]
+}
