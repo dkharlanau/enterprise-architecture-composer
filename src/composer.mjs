@@ -3,6 +3,7 @@ import { decideIntegrationPattern } from './integration-decision.mjs';
 import { analyzeArchitectureQuality } from './quality.mjs';
 import { buildTransitionArchitecture } from './transition.mjs';
 import { applyArchitectureDecisions, architectureDecisionInput } from './decisions.mjs';
+import { composeSecurity } from './security.mjs';
 
 const EXPLICIT_NFR_KEYS = ['latency', 'consistency', 'volume', 'replay', 'ordering', 'offlineTolerance'];
 
@@ -57,6 +58,19 @@ function sortedUnique(values = []) {
 
 function uniqueById(items = []) {
   return [...new Map(items.map((item) => [item.id, item])).values()].sort((a, b) => a.id.localeCompare(b.id));
+}
+
+function addSecurityDependencies(workPackage, security) {
+  if (!workPackage.id.startsWith('wp.integration.')) return workPackage;
+  const integrationId = (workPackage.sourceIds ?? []).find((id) => id.startsWith('integration.'));
+  if (!integrationId) return workPackage;
+  return {
+    ...workPackage,
+    dependsOn: sortedUnique([
+      ...(workPackage.dependsOn ?? []),
+      ...(security.integrationDependencies[integrationId] ?? [])
+    ])
+  };
 }
 
 export function composeArchitecture(input = {}) {
@@ -150,7 +164,8 @@ export function composeArchitecture(input = {}) {
     ...(input.nfrProfile ? { nfrProfile: structuredClone(input.nfrProfile) } : {}),
     ...(input.requireExplicitNfrs ? { requireExplicitNfrs: true } : {}),
     ...(Object.keys(integrationProfiles).length ? { integrationProfiles } : {}),
-    ...(input.currentLandscape ? { currentLandscape: structuredClone(input.currentLandscape) } : {})
+    ...(input.currentLandscape ? { currentLandscape: structuredClone(input.currentLandscape) } : {}),
+    ...(input.securityProfile ? { securityProfile: structuredClone(input.securityProfile) } : {})
   };
 
   const draft = {
@@ -188,10 +203,25 @@ export function composeArchitecture(input = {}) {
     findings: [...draft.findings, ...appliedDecisions.findings].sort((a, b) => a.id.localeCompare(b.id))
   };
 
-  const quality = analyzeArchitectureQuality(decidedDraft);
-  const transition = buildTransitionArchitecture(decidedDraft, input.currentLandscape ?? null);
+  const security = composeSecurity(decidedDraft, input.securityProfile ?? {});
+  const securedDraft = {
+    ...decidedDraft,
+    blueprint: {
+      ...decidedDraft.blueprint,
+      trustBoundaries: security.trustBoundaries
+    },
+    security: {
+      schemaVersion: security.schemaVersion,
+      review: security.review,
+      integrationDependencies: security.integrationDependencies
+    }
+  };
+
+  const quality = analyzeArchitectureQuality(securedDraft);
+  const transition = buildTransitionArchitecture(securedDraft, input.currentLandscape ?? null);
   const findings = uniqueById([
-    ...decidedDraft.findings,
+    ...securedDraft.findings,
+    ...security.findings,
     ...quality.findings,
     ...(transition?.findings ?? [])
   ]);
@@ -201,11 +231,16 @@ export function composeArchitecture(input = {}) {
     .map((item) => item.id);
   const baseWorkPackages = result.workPackages.map((item) => item.id === 'wp.architecture.resolve-decisions'
     ? { ...item, sourceIds: sortedUnique([...(item.sourceIds ?? []), ...decisionFindingIds]) }
-    : item);
-  const workPackages = uniqueById([...baseWorkPackages, ...(transition?.workPackages ?? [])]);
+    : item)
+    .map((item) => addSecurityDependencies(item, security));
+  const workPackages = uniqueById([
+    ...baseWorkPackages,
+    ...security.workPackages,
+    ...(transition?.workPackages ?? [])
+  ]);
 
   return {
-    ...decidedDraft,
+    ...securedDraft,
     findings,
     workPackages,
     ...(transition ? { transition: { ...transition, findings: undefined, workPackages: undefined } } : {}),
@@ -215,6 +250,7 @@ export function composeArchitecture(input = {}) {
       workPackageCount: workPackages.length,
       explicitNfrGapCount: findings.filter((item) => item.kind === 'nfr-decision').length,
       ...quality.metrics,
+      ...security.metrics,
       ...(transition ? {
         transitionSystemCount: transition.systems.length,
         transitionIntegrationCount: transition.integrations.length,
