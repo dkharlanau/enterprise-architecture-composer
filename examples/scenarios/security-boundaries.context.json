@@ -1,0 +1,31 @@
+{
+  "industry": "manufacturing",
+  "operatingModel": "b2b",
+  "processes": ["order-to-cash", "procure-to-pay"],
+  "constraints": {
+    "multiCompany": true,
+    "highVolume": true,
+    "retainLegacyWms": false
+  },
+  "existingSystems": ["erp"],
+  "securityProfile": {
+    "integrations": {
+      "integration.sales-order-request": {
+        "exposure": "public",
+        "authenticationBoundary": true,
+        "auditEvidence": "required"
+      },
+      "integration.delivery-to-warehouse": {
+        "exposure": "private",
+        "privileged": true
+      }
+    },
+    "data": {
+      "data.customer": {
+        "classification": "sensitive",
+        "residency": ["EU"],
+        "auditEvidence": true
+      }
+    }
+  }
+}
