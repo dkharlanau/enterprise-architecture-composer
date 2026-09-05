@@ -40,13 +40,14 @@
     "metrics:demo": "node bin/eac.mjs metrics examples/scenarios/global-b2b-manufacturer.context.json",
     "glossary:demo": "node bin/eac.mjs glossary",
     "import:demo": "node bin/eac-import.mjs examples/scenarios/o2c-starter.context.json --applications examples/import/application-inventory.csv --interfaces examples/import/interface-inventory.csv",
+    "security:demo": "node bin/eac.mjs compose examples/scenarios/security-boundaries.context.json",
     "roadmap:demo": "node bin/eac.mjs roadmap examples/scenarios/global-b2b-manufacturer.context.json --markdown",
     "report:demo": "node bin/eac.mjs report examples/scenarios/global-b2b-manufacturer.context.json",
     "visual:demo": "node bin/eac.mjs visual examples/scenarios/global-b2b-manufacturer.context.json",
     "process-starter:demo": "node bin/eac.mjs process-starter examples/scenarios/global-b2b-manufacturer.context.json order-to-cash",
     "interface-proposal:demo": "node bin/eac.mjs interface-proposal examples/scenarios/global-b2b-manufacturer.context.json integration.sales-order-request",
     "test": "node --test",
-    "check": "node --check src/catalog.mjs && node --check src/glossary.mjs && node --check src/rulebook.mjs && node --check src/engine.mjs && node --check src/composer.mjs && node --check src/integration-decision.mjs && node --check src/quality.mjs && node --check src/transition.mjs && node --check src/metrics.mjs && node --check src/roadmap.mjs && node --check src/export.mjs && node --check src/visual-projection.mjs && node --check src/handoff.mjs && node --check src/diff.mjs && node --check src/decisions.mjs && node --check src/provenance.mjs && node --check src/review-report.mjs && node --check src/options.mjs && node --check src/import-landscape.mjs && node --check src/app.mjs && node --check bin/eac.mjs && node --check bin/eac-import.mjs && node --check bin/eac-options.mjs && node --check bin/eac-review.mjs && node --check bin/eac-provenance.mjs"
+    "check": "node --check src/catalog.mjs && node --check src/glossary.mjs && node --check src/rulebook.mjs && node --check src/engine.mjs && node --check src/composer.mjs && node --check src/integration-decision.mjs && node --check src/quality.mjs && node --check src/security.mjs && node --check src/transition.mjs && node --check src/metrics.mjs && node --check src/roadmap.mjs && node --check src/export.mjs && node --check src/visual-projection.mjs && node --check src/handoff.mjs && node --check src/diff.mjs && node --check src/decisions.mjs && node --check src/provenance.mjs && node --check src/review-report.mjs && node --check src/options.mjs && node --check src/import-landscape.mjs && node --check src/app.mjs && node --check bin/eac.mjs && node --check bin/eac-import.mjs && node --check bin/eac-options.mjs && node --check bin/eac-review.mjs && node --check bin/eac-provenance.mjs"
   },
   "engines": {
     "node": ">=20"
