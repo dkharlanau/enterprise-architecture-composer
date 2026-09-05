@@ -1,0 +1,44 @@
+{
+  "$schema": "../schemas/architecture-pack.schema.json",
+  "format": "enterprise-architecture-composer/architecture-pack",
+  "formatVersion": "0.1",
+  "pack": {
+    "id": "pack.industry.automotive",
+    "version": "0.1.0",
+    "kind": "industry",
+    "name": "Automotive manufacturing reference",
+    "description": "Advisory automotive manufacturing guidance layered over stable Composer process, capability and integration semantics."
+  },
+  "evidence": [
+    {
+      "id": "pack.industry.automotive.evidence.reference-method",
+      "evidenceType": "heuristic",
+      "title": "Automotive reference architecture method",
+      "note": "Internal reference guidance for architecture review; it is not presented as an industry standard or customer-specific fact."
+    }
+  ],
+  "aliases": [
+    {
+      "id": "pack.industry.automotive.alias.sequenced-manufacturing",
+      "alias": "sequenced manufacturing",
+      "targetId": "process.plan-to-produce"
+    }
+  ],
+  "guidance": [
+    {
+      "id": "pack.industry.automotive.guidance.sequence-sensitive-production",
+      "classification": "heuristic",
+      "statement": "Sequence-sensitive manufacturing should make ordering, execution acknowledgements and failure recovery explicit across production handoffs.",
+      "targetIds": ["process.plan-to-produce", "cap.production-execution"],
+      "sourceIds": ["pack.industry.automotive.evidence.reference-method"]
+    },
+    {
+      "id": "pack.industry.automotive.guidance.warehouse-production-boundary",
+      "classification": "heuristic",
+      "statement": "When production and warehouse execution are separate responsibilities, inventory and completion handoffs should be reviewed as an explicit architecture boundary.",
+      "targetIds": ["cap.warehouse-management", "cap.production-execution"],
+      "sourceIds": ["pack.industry.automotive.evidence.reference-method"]
+    }
+  ],
+  "options": []
+}
