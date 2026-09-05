@@ -11,6 +11,17 @@ const GUIDANCE_CLASSES = new Set(['fact', 'heuristic', 'vendor-mapping']);
 const OPTION_TYPES = new Set(['system-role', 'integration-pattern', 'capability']);
 const PREFERENCE_TYPES = new Set(['none', 'owner-preference', 'commercial']);
 
+const ALLOWED_FIELDS = {
+  top: new Set(['$schema', 'format', 'formatVersion', 'pack', 'evidence', 'aliases', 'guidance', 'options']),
+  pack: new Set(['id', 'version', 'kind', 'name', 'description']),
+  evidence: new Set(['id', 'evidenceType', 'title', 'uri', 'note']),
+  alias: new Set(['id', 'alias', 'targetId']),
+  guidance: new Set(['id', 'classification', 'statement', 'targetIds', 'sourceIds']),
+  option: new Set(['id', 'optionType', 'targetId', 'name', 'vendor', 'description', 'fitEvidence', 'commercialPreference']),
+  fitEvidence: new Set(['statement', 'sourceIds']),
+  commercialPreference: new Set(['status', 'rationale'])
+};
+
 function normalizedAlias(value) {
   return String(value ?? '')
     .normalize('NFKC')
@@ -28,6 +39,13 @@ function duplicateValues(values = []) {
     seen.add(value);
   }
   return [...duplicates].sort((a, b) => String(a).localeCompare(String(b)));
+}
+
+function validateKnownFields(record, allowed, errors, label) {
+  if (!record || typeof record !== 'object' || Array.isArray(record)) return;
+  for (const key of Object.keys(record)) {
+    if (!allowed.has(key)) errors.push(`${label} contains unsupported field '${key}'.`);
+  }
 }
 
 function namespaced(packId, id) {
@@ -63,6 +81,7 @@ function validateFitEvidence(option, evidence, errors) {
     return;
   }
   for (const [index, item] of option.fitEvidence.entries()) {
+    validateKnownFields(item, ALLOWED_FIELDS.fitEvidence, errors, `Option ${option.id} fitEvidence[${index}]`);
     if (!item?.statement || String(item.statement).trim().length < 10) {
       errors.push(`Option ${option.id} fitEvidence[${index}] requires a substantive statement.`);
     }
@@ -79,6 +98,9 @@ export function validateArchitecturePack(pack, options = {}) {
   const errors = [];
   const warnings = [];
   const packId = pack?.pack?.id;
+
+  validateKnownFields(pack, ALLOWED_FIELDS.top, errors, 'Architecture pack');
+  validateKnownFields(pack?.pack, ALLOWED_FIELDS.pack, errors, 'pack');
 
   if (pack?.format !== ARCHITECTURE_PACK_FORMAT) errors.push(`format must be ${ARCHITECTURE_PACK_FORMAT}.`);
   if (pack?.formatVersion !== ARCHITECTURE_PACK_FORMAT_VERSION) errors.push(`formatVersion must be ${ARCHITECTURE_PACK_FORMAT_VERSION}.`);
@@ -107,12 +129,14 @@ export function validateArchitecturePack(pack, options = {}) {
 
   const evidence = evidenceIndex(pack ?? {});
   for (const item of pack?.evidence ?? []) {
+    validateKnownFields(item, ALLOWED_FIELDS.evidence, errors, `Evidence ${item?.id ?? '<missing>'}`);
     if (!EVIDENCE_TYPES.has(item.evidenceType)) errors.push(`Evidence ${item.id} has unsupported evidenceType ${item.evidenceType}.`);
     if (!item.title) errors.push(`Evidence ${item.id} requires a title.`);
     if (!item.note || String(item.note).trim().length < 10) errors.push(`Evidence ${item.id} requires a boundary note.`);
   }
 
   for (const alias of pack?.aliases ?? []) {
+    validateKnownFields(alias, ALLOWED_FIELDS.alias, errors, `Alias ${alias?.id ?? '<missing>'}`);
     if (!alias.alias) errors.push(`Alias ${alias.id} requires alias text.`);
     if (!coreTargetExists(alias.targetId, glossary)) errors.push(`Alias ${alias.id} references unknown core target ${alias.targetId}.`);
     const resolution = resolveGlossaryAlias(alias.alias, {}, glossary);
@@ -124,6 +148,7 @@ export function validateArchitecturePack(pack, options = {}) {
   }
 
   for (const guidance of pack?.guidance ?? []) {
+    validateKnownFields(guidance, ALLOWED_FIELDS.guidance, errors, `Guidance ${guidance?.id ?? '<missing>'}`);
     if (!GUIDANCE_CLASSES.has(guidance.classification)) errors.push(`Guidance ${guidance.id} has invalid classification ${guidance.classification}.`);
     if (!guidance.statement || String(guidance.statement).trim().length < 20) errors.push(`Guidance ${guidance.id} requires a substantive statement.`);
     if (!Array.isArray(guidance.targetIds) || !guidance.targetIds.length) errors.push(`Guidance ${guidance.id} requires targetIds.`);
@@ -143,6 +168,8 @@ export function validateArchitecturePack(pack, options = {}) {
   }
 
   for (const option of pack?.options ?? []) {
+    validateKnownFields(option, ALLOWED_FIELDS.option, errors, `Option ${option?.id ?? '<missing>'}`);
+    validateKnownFields(option?.commercialPreference, ALLOWED_FIELDS.commercialPreference, errors, `Option ${option?.id ?? '<missing>'} commercialPreference`);
     if (!OPTION_TYPES.has(option.optionType)) errors.push(`Option ${option.id} has invalid optionType ${option.optionType}.`);
     if (!coreTargetExists(option.targetId, glossary)) errors.push(`Option ${option.id} references unknown core target ${option.targetId}.`);
     if (!option.name) errors.push(`Option ${option.id} requires a name.`);
