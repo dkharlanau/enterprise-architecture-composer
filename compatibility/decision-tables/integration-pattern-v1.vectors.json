@@ -1,0 +1,63 @@
+{
+  "format": "enterprise-architecture-composer/decision-table-compatibility-vectors",
+  "formatVersion": "0.1",
+  "tableId": "eac-integration-pattern-selection",
+  "tableArtifact": "./integration-pattern-v1.json",
+  "runtimeOwner": "https://github.com/dkharlanau/decision-tables-as-code",
+  "vectors": [
+    {
+      "id": "analytics",
+      "input": { "purpose": "analytics", "latency": "minutes", "fanOut": 1, "partnerBoundary": false, "payloadSize": "large", "replay": "desirable" },
+      "tableInput": { "purpose": "analytics", "latency": "minutes", "fan_out": 1, "partner_boundary": false, "payload_size": "large", "replay": "desirable" },
+      "expectedPatternId": "pattern.etl-elt"
+    },
+    {
+      "id": "partner-document",
+      "input": { "purpose": "partner-document", "latency": "minutes", "fanOut": 1, "partnerBoundary": true, "payloadSize": "medium", "replay": "required" },
+      "tableInput": { "purpose": "partner-document", "latency": "minutes", "fan_out": 1, "partner_boundary": true, "payload_size": "medium", "replay": "required" },
+      "expectedPatternId": "pattern.edi-b2b"
+    },
+    {
+      "id": "replication",
+      "input": { "purpose": "replication", "latency": "seconds", "fanOut": 1, "partnerBoundary": false, "payloadSize": "medium", "replay": "desirable" },
+      "tableInput": { "purpose": "replication", "latency": "seconds", "fan_out": 1, "partner_boundary": false, "payload_size": "medium", "replay": "desirable" },
+      "expectedPatternId": "pattern.cdc"
+    },
+    {
+      "id": "business-event",
+      "input": { "purpose": "business-event", "latency": "seconds", "fanOut": 3, "partnerBoundary": false, "payloadSize": "medium", "replay": "required" },
+      "tableInput": { "purpose": "business-event", "latency": "seconds", "fan_out": 3, "partner_boundary": false, "payload_size": "medium", "replay": "required" },
+      "expectedPatternId": "pattern.domain-event"
+    },
+    {
+      "id": "immediate-business-request",
+      "input": { "purpose": "business-request", "latency": "immediate", "consistency": "strong", "fanOut": 1, "partnerBoundary": false, "payloadSize": "small", "replay": "not-required", "immediateResponse": true },
+      "tableInput": { "purpose": "business-request", "latency": "immediate", "fan_out": 1, "partner_boundary": false, "payload_size": "small", "replay": "not-required" },
+      "expectedPatternId": "pattern.sync-api"
+    },
+    {
+      "id": "delayed-state-transfer",
+      "input": { "purpose": "state-transfer", "latency": "hours", "fanOut": 1, "partnerBoundary": false, "payloadSize": "medium", "replay": "desirable" },
+      "tableInput": { "purpose": "state-transfer", "latency": "hours", "fan_out": 1, "partner_boundary": false, "payload_size": "medium", "replay": "desirable" },
+      "expectedPatternId": "pattern.batch-file"
+    },
+    {
+      "id": "very-large-state-transfer",
+      "input": { "purpose": "state-transfer", "latency": "seconds", "fanOut": 1, "partnerBoundary": false, "payloadSize": "very-large", "replay": "desirable" },
+      "tableInput": { "purpose": "state-transfer", "latency": "seconds", "fan_out": 1, "partner_boundary": false, "payload_size": "very-large", "replay": "desirable" },
+      "expectedPatternId": "pattern.batch-file"
+    },
+    {
+      "id": "state-transfer",
+      "input": { "purpose": "state-transfer", "latency": "seconds", "fanOut": 1, "partnerBoundary": false, "payloadSize": "medium", "replay": "desirable" },
+      "tableInput": { "purpose": "state-transfer", "latency": "seconds", "fan_out": 1, "partner_boundary": false, "payload_size": "medium", "replay": "desirable" },
+      "expectedPatternId": "pattern.async-message"
+    },
+    {
+      "id": "command",
+      "input": { "purpose": "command", "latency": "seconds", "fanOut": 1, "partnerBoundary": false, "payloadSize": "medium", "replay": "desirable" },
+      "tableInput": { "purpose": "command", "latency": "seconds", "fan_out": 1, "partner_boundary": false, "payload_size": "medium", "replay": "desirable" },
+      "expectedPatternId": "pattern.async-message"
+    }
+  ]
+}
