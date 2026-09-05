@@ -51,6 +51,23 @@ test('Pages artifact includes every public contract advertised by the workbench'
   assert.match(manifest.interfaces.context_schema, /\/schemas\/context\.schema\.json$/);
 });
 
+test('public product cross-links to portfolio and semantic-owner repositories', async () => {
+  const index = await text('index.html');
+  const manifest = JSON.parse(await text('docs/agent-manifest.json'));
+
+  assert.match(index, /https:\/\/dkharlanau\.github\.io\/services\/compose-target-enterprise-architecture\//);
+  assert.match(index, /https:\/\/github\.com\/dkharlanau\/process-as-code/);
+  assert.match(index, /https:\/\/github\.com\/dkharlanau\/interface-as-code/);
+  assert.match(index, /https:\/\/github\.com\/dkharlanau\/mapping-as-code/);
+  assert.match(index, /https:\/\/github\.com\/dkharlanau\/enterprise-change-graph/);
+  assert.match(index, /https:\/\/github\.com\/dkharlanau\/visual-workbench/);
+
+  const owners = manifest.semantic_ownership.hands_off_to;
+  assert.match(owners['process semantics'], /process-as-code$/);
+  assert.match(owners['interface operational contracts'], /interface-as-code$/);
+  assert.match(owners['visual rendering'], /visual-workbench$/);
+});
+
 test('v0.2 product views are present in the first static document', async () => {
   const index = await text('index.html');
   for (const view of ['Blueprint', 'Integrations', 'Data', 'Transition', 'Roadmap', 'Delta']) {
