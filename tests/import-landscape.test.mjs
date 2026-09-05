@@ -38,11 +38,15 @@ test('application inventory imports concrete instances with canonical role IDs a
   assert.ok(imported.facts.every((item) => Number.isInteger(item.provenance.row)));
 });
 
-test('ambiguous application role is a conflict and is not silently imported', () => {
+test('typed application role resolves an alias that is ambiguous in the global glossary', () => {
   const imported = importApplicationInventoryCsv('id,name,role\napp.warehouse,Warehouse Platform,warehouse\n');
-  assert.equal(imported.currentLandscape.systems.length, 0);
-  assert.equal(imported.conflicts[0].status, 'ambiguous');
-  assert.deepEqual(imported.conflicts[0].candidates.map((item) => item.id), ['cap.warehouse-management', 'sys.wms'].filter((id) => id.startsWith('sys.')));
+  assert.equal(imported.conflicts.length, 0);
+  assert.deepEqual(imported.currentLandscape.systems, [{
+    id: 'app.warehouse',
+    name: 'Warehouse Platform',
+    roleId: 'sys.wms',
+    strategy: 'undecided'
+  }]);
 });
 
 test('interface inventory retains target integration mapping and source-row provenance', async () => {
@@ -53,15 +57,26 @@ test('interface inventory retains target integration mapping and source-row prov
   assert.ok(imported.facts.find((item) => item.subjectId === 'if.erp-wms').provenance.row >= 2);
 });
 
-test('Backstage requires explicit Composer role annotation and keeps entity provenance', async () => {
+test('Backstage uses the typed Composer system-role namespace and keeps entity provenance', async () => {
   const entities = JSON.parse(await exampleText('backstage-entities.json'));
   const imported = importBackstageEntities(entities);
-  assert.equal(imported.currentLandscape.systems.length, 1);
-  assert.equal(imported.currentLandscape.systems[0].id, 'app.finance-erp');
-  assert.equal(imported.currentLandscape.systems[0].roleId, 'sys.erp');
+  assert.equal(imported.currentLandscape.systems.length, 2);
+  assert.equal(imported.currentLandscape.systems.find((item) => item.id === 'app.finance-erp').roleId, 'sys.erp');
+  assert.equal(imported.currentLandscape.systems.find((item) => item.id === 'app.backstage.warehouse-platform').roleId, 'sys.wms');
+  assert.equal(imported.conflicts.length, 0);
+  assert.ok(imported.facts.some((item) => item.provenance.entityRef.includes('system:default/finance-erp')));
+  assert.ok(imported.facts.some((item) => item.provenance.entityRef.includes('system:default/warehouse-platform')));
+});
+
+test('Backstage still requires an explicit Composer role annotation before importing an instance', () => {
+  const imported = importBackstageEntities([{
+    apiVersion: 'backstage.io/v1alpha1',
+    kind: 'System',
+    metadata: { name: 'unmapped-system', annotations: {} }
+  }]);
+  assert.equal(imported.currentLandscape.systems.length, 0);
   assert.equal(imported.conflicts.length, 1);
-  assert.equal(imported.conflicts[0].status, 'ambiguous');
-  assert.ok(imported.facts[0].provenance.entityRef.includes('system:default/finance-erp'));
+  assert.equal(imported.conflicts[0].status, 'unknown');
 });
 
 test('Process-as-Code import can add recognized process scope without inventing application instances', () => {
@@ -77,7 +92,7 @@ test('Process-as-Code import can add recognized process scope without inventing 
   assert.ok(imported.facts.some((item) => item.kind === 'declared-logical-system'));
 });
 
-test('Interface-as-Code import stays evidence when endpoint systems are not unambiguous Composer roles', () => {
+test('Interface-as-Code import stays evidence when endpoint systems are not known Composer roles', () => {
   const imported = importInterfaceAsCode({
     version: '1.0',
     interface: {
