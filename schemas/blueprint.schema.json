@@ -13,13 +13,41 @@
     "blueprint": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["processes", "capabilities", "systems", "dataObjects", "integrations"],
+      "required": ["processes", "capabilities", "systems", "dataObjects", "integrations", "trustBoundaries"],
       "properties": {
         "processes": { "$ref": "#/$defs/objects" },
         "capabilities": { "$ref": "#/$defs/objects" },
         "systems": { "$ref": "#/$defs/objects" },
         "dataObjects": { "$ref": "#/$defs/objects" },
-        "integrations": { "$ref": "#/$defs/objects" }
+        "integrations": { "$ref": "#/$defs/objects" },
+        "trustBoundaries": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/trustBoundary" }
+        }
+      }
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "review", "integrationDependencies"],
+      "properties": {
+        "schemaVersion": { "const": "0.1" },
+        "review": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["complianceStatus", "statement"],
+          "properties": {
+            "complianceStatus": { "const": "not-assessed" },
+            "statement": { "type": "string", "minLength": 1 }
+          }
+        },
+        "integrationDependencies": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^wp\\.security\\." }
+          }
+        }
       }
     },
     "transition": {
@@ -114,6 +142,23 @@
           "kind": { "type": "string", "minLength": 1 },
           "name": { "type": "string", "minLength": 1 }
         }
+      }
+    },
+    "trustBoundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "name", "boundaryType", "description", "integrationIds", "systemIds", "dataObjectIds", "ruleIds", "source"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^trust\\." },
+        "kind": { "const": "trust-boundary" },
+        "name": { "type": "string", "minLength": 1 },
+        "boundaryType": { "enum": ["external-partner", "public-api", "private-api", "identity", "privileged", "sensitive-data", "residency"] },
+        "description": { "type": "string", "minLength": 1 },
+        "integrationIds": { "type": "array", "items": { "type": "string", "pattern": "^integration\\." } },
+        "systemIds": { "type": "array", "items": { "type": "string", "pattern": "^sys\\." } },
+        "dataObjectIds": { "type": "array", "items": { "type": "string", "pattern": "^data\\." } },
+        "ruleIds": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "source": { "type": "string", "minLength": 1 }
       }
     }
   }
