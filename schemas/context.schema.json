@@ -60,6 +60,7 @@
       "propertyNames": { "pattern": "^integration\\.[a-z0-9.-]+$" },
       "additionalProperties": { "$ref": "#/$defs/integrationProfile" }
     },
+    "securityProfile": { "$ref": "#/$defs/securityProfile" },
     "architectureDecisions": {
       "type": "array",
       "items": { "$ref": "#/$defs/architectureDecision" }
@@ -113,6 +114,45 @@
         "payloadSize": { "enum": ["small", "medium", "large", "very-large"] },
         "changeFrequency": { "enum": ["low", "medium", "high"] },
         "immediateResponse": { "type": "boolean" }
+      }
+    },
+    "securityProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "integrations": {
+          "type": "object",
+          "propertyNames": { "pattern": "^integration\\.[a-z0-9.-]+$" },
+          "additionalProperties": { "$ref": "#/$defs/securityIntegrationProfile" }
+        },
+        "data": {
+          "type": "object",
+          "propertyNames": { "pattern": "^data\\.[a-z0-9.-]+$" },
+          "additionalProperties": { "$ref": "#/$defs/securityDataProfile" }
+        }
+      }
+    },
+    "securityIntegrationProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "exposure": { "enum": ["internal", "private", "public", "partner"] },
+        "authenticationBoundary": { "type": "boolean" },
+        "privileged": { "type": "boolean" },
+        "auditEvidence": { "enum": ["not-specified", "required"] }
+      }
+    },
+    "securityDataProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "classification": { "enum": ["public", "internal", "confidential", "sensitive", "regulated"] },
+        "residency": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "auditEvidence": { "type": "boolean" }
       }
     },
     "architectureDecision": {
