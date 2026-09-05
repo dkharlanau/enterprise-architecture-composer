@@ -14,7 +14,8 @@ export function toVisualWorkbench(result, options = {}) {
     { id: 'business', label: 'Business', kind: 'lane', order: 1 },
     { id: 'applications', label: 'Applications & platforms', kind: 'lane', order: 2 },
     { id: 'data', label: 'Data', kind: 'lane', order: 3 },
-    { id: 'decisions', label: 'Open decisions', kind: 'lane', order: 4 }
+    { id: 'security', label: 'Trust boundaries', kind: 'lane', order: 4 },
+    { id: 'decisions', label: 'Open decisions', kind: 'lane', order: 5 }
   ];
 
   const capabilityNodes = result.blueprint.capabilities.map((item) => ({
@@ -50,6 +51,17 @@ export function toVisualWorkbench(result, options = {}) {
     tags: tags('data', item.id, [item.owner ? 'ownership:defined' : 'ownership:missing'])
   }));
 
+  const trustBoundaryNodes = (result.blueprint.trustBoundaries ?? []).map((item) => ({
+    id: item.id,
+    label: item.name,
+    type: 'risk',
+    subtitle: `Trust boundary · ${item.boundaryType}`,
+    description: item.description,
+    group: 'security',
+    status: 'warning',
+    tags: tags('security', item.id, ['trust-boundary', `boundary:${item.boundaryType}`, `source:${item.source}`])
+  }));
+
   const findingNodes = result.findings.map((item) => ({
     id: item.id,
     label: item.nextDecision,
@@ -79,9 +91,26 @@ export function toVisualWorkbench(result, options = {}) {
       status: 'muted'
     }));
 
+  const trustBoundaryEdges = (result.blueprint.trustBoundaries ?? []).flatMap((boundary) => [
+    ...boundary.systemIds.map((id) => ({
+      from: id,
+      to: boundary.id,
+      label: 'crosses trust boundary',
+      type: 'relation',
+      status: 'warning'
+    })),
+    ...boundary.dataObjectIds.map((id) => ({
+      from: id,
+      to: boundary.id,
+      label: 'security constraint',
+      type: 'relation',
+      status: 'warning'
+    }))
+  ]);
+
   const findingEdges = result.findings.flatMap((finding) =>
     finding.objectIds
-      .filter((id) => [...result.blueprint.systems, ...result.blueprint.dataObjects, ...result.blueprint.capabilities].some((item) => item.id === id))
+      .filter((id) => [...result.blueprint.systems, ...result.blueprint.dataObjects, ...result.blueprint.capabilities, ...(result.blueprint.trustBoundaries ?? [])].some((item) => item.id === id))
       .map((id) => ({
         from: id,
         to: finding.id,
@@ -101,8 +130,8 @@ export function toVisualWorkbench(result, options = {}) {
       theme: 'paper',
       density: 'compact',
       groups,
-      nodes: [...capabilityNodes, ...systemNodes, ...dataNodes, ...findingNodes].sort((a, b) => a.id.localeCompare(b.id)),
-      edges: [...integrationEdges, ...ownershipEdges, ...findingEdges].sort((a, b) => `${a.from}:${a.to}:${a.label}`.localeCompare(`${b.from}:${b.to}:${b.label}`)),
+      nodes: [...capabilityNodes, ...systemNodes, ...dataNodes, ...trustBoundaryNodes, ...findingNodes].sort((a, b) => a.id.localeCompare(b.id)),
+      edges: [...integrationEdges, ...ownershipEdges, ...trustBoundaryEdges, ...findingEdges].sort((a, b) => `${a.from}:${a.to}:${a.label}`.localeCompare(`${b.from}:${b.to}:${b.label}`)),
       views: [
         {
           id: 'executive',
@@ -127,6 +156,14 @@ export function toVisualWorkbench(result, options = {}) {
           kind: 'data-flow',
           includeNodeTypes: ['system', 'data'],
           includeEdgeTypes: ['relation', 'data']
+        },
+        {
+          id: 'security',
+          title: 'Trust & security boundaries',
+          focus: 'security',
+          kind: 'dependency-map',
+          includeNodeTypes: ['system', 'data', 'risk'],
+          includeEdgeTypes: ['relation', 'flow', 'data', 'exception']
         },
         {
           id: 'exceptions',
