@@ -160,7 +160,7 @@ export function toVisualWorkbench(result, options = {}) {
         {
           id: 'security',
           title: 'Trust & security boundaries',
-          focus: 'security',
+          focus: 'controls',
           kind: 'dependency-map',
           includeNodeTypes: ['system', 'data', 'risk'],
           includeEdgeTypes: ['relation', 'flow', 'data', 'exception']
