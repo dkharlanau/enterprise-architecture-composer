@@ -59,17 +59,7 @@ export function parseCsvRecords(text) {
 
 function resolveSystemRole(value) {
   if (!value) return { status: 'unknown', alias: '', candidates: [] };
-  const resolution = resolveGlossaryAlias(value);
-  if (resolution.status === 'resolved' && resolution.entry?.kind !== 'system-role') {
-    return { ...resolution, status: 'unknown', candidates: [] };
-  }
-  if (resolution.status === 'ambiguous') {
-    return {
-      ...resolution,
-      candidates: (resolution.candidates ?? []).filter((item) => item.kind === 'system-role')
-    };
-  }
-  return resolution;
+  return resolveGlossaryAlias(value, { kind: 'system-role' });
 }
 
 function roleConflict(sourceId, row, value, resolution) {
