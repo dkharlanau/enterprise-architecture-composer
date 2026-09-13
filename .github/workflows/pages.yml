@@ -46,8 +46,9 @@ jobs:
 
       - name: Stage verified ARWP profile and discovery
         run: node scripts/stage-arwp.mjs _site
+      - name: Add Goose ARWP Proof Mark
+        run: node scripts/inject-goose-proof-mark.mjs _site
       - name: Add consent-aware portfolio analytics
-
         run: node scripts/inject-portfolio-analytics.mjs _site
 
       - name: Upload Pages artifact
